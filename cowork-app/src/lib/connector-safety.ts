@@ -1,0 +1,26 @@
+// Connector diagnostics. Connector errors can carry message content, ids,
+// URLs and tokens, so log only the operation, the binding mode and a guarded
+// numeric HTTP status — never the upstream error itself.
+
+type DiagnosticBindingScope = "table" | "action";
+
+export function diagnosticHttpStatus(value: unknown): number | undefined {
+  if (typeof value !== "number" || !Number.isInteger(value)) return undefined;
+  return value >= 100 && value <= 599 ? value : undefined;
+}
+
+export function logConnectorFailure(
+  operation: string,
+  bindingScope: DiagnosticBindingScope,
+  error: unknown,
+): void {
+  const fields =
+    typeof error === "object" && error !== null
+      ? (error as Record<string, unknown>)
+      : {};
+  console.error("connector operation failed", {
+    operation,
+    bindingScope,
+    status: diagnosticHttpStatus(fields.status),
+  });
+}
