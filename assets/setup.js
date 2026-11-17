@@ -357,7 +357,7 @@
       { class: "cards-2" },
       h("div", { class: "rule" }, h("h3", null, "Add to the dashboard"), "Direct asks, commitments, customer or executive issues, deadlines, decisions and risks. Each gets a priority, a summary, why it matters and a researched draft."),
       h("div", { class: "rule" }, h("h3", null, "Skip and mark read"), "Marketing, newsletters, broad announcements, automated notices and thank-you replies that ask nothing of you."),
-      h("div", { class: "rule" }, h("h3", null, "Skip but leave unread"), "Anything from a customer, anything personal, and anything with an action still open, so you still see it."),
+      h("div", { class: "rule" }, h("h3", null, "Skip but leave unread"), "Anything personal and anything with an action still open, so you still see it. Customer email is left to Step 5, which adds every one."),
     );
   }
 

@@ -22,7 +22,7 @@ their details into every prompt.
 | 0:05 | **Step 1: constitution.** New Cowork task named *COS Email and Teams Dashboard*; paste Prompt 1 and refine it together. | Cowork confirms how it will operate. |
 | 0:15 | **Customize once + Step 2.** Fill in their details on the setup page, then create the private feed. | The three files exist in OneDrive. |
 | 0:20 | **Step 3: open the dashboard.** Connect with the OneDrive folder (or sign in). | The dashboard shows "No checks recorded yet". |
-| 0:25 | **Steps 4 and 5: email.** Create the email screening and the customer rule + screening. Send them a test email that asks a question. | Latest check shows the test email, with a draft. |
+| 0:25 | **Steps 4 and 5: email.** Create the email screening and the customer email screening (both watch the Inbox; no Outlook rule needed). Send them a test email that asks a question. | Latest check shows the test email, with a draft. |
 | 0:40 | **Steps 6 and 7: Teams.** Create the key-person alerts and the scheduled sweep. Ask a colleague to message them. | The alert lands in their self-chat and on the dashboard. |
 | 0:55 | **Wrap up.** Editing pauses automations; how to read Recent checks; Copilot Credits and `/cost`; book a 30-minute follow-up in a week for Step 10 (audit) and tuning. | Follow-up is on the calendar. |
 

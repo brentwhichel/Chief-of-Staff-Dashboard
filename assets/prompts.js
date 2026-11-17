@@ -105,12 +105,13 @@
     ACT_AS +
       " A new email just arrived in my Inbox. Decide whether it belongs on my private COS Communications Dashboard, record the decision, and keep my inbox tidy. This run is read-and-prepare only.",
     "",
-    "1 - READ the email that started this run and enough of its thread to understand the current ask (typically the last few messages). Note who sent it, who else is on it, whether it continues a thread already on the dashboard, and whether I have already answered.",
-    "2 - SKIP (add nothing) when it asks nothing of me: marketing, promotions and newsletters; broad announcements, digests and invitations sent to large distribution lists; automated notices, receipts, alerts and system messages; calendar responses, updates and cancellations with no ask; out-of-office and delivery notices; thank-you, acknowledgement and reply-all chatter; FYIs where I am only copied. If it continues a thread already on the dashboard, add it only when it brings a NEW ask of me; otherwise skip it and say in the run note whether the existing draft is now out of date. A VIP name, a high-importance flag or unread status alone never qualifies.",
-    "3 - " + qualify("the email"),
-    "4 - " + research("email"),
-    "5 - RECORD. " + FEED_FILE + " Add nothing if an item with the same id already exists. Otherwise " + APPEND_RULE + " Object shape: " + EMAIL_SHAPE,
-    "6 - READ OR UNREAD. Leave every added email unread. For a skipped email, mark it as read when it is marketing, a newsletter, a broad announcement or an automated notice with nothing left for me to do. Leave it unread when it comes from a customer domain ({{CUSTOMER_DOMAINS}}), when it is personal, when it is encrypted or protected, or when it still holds an action for me (an RSVP, a form, a deadline). Say which you did in the run note.",
+    "1 - LEAVE CUSTOMER EMAIL TO THE CUSTOMER SCREENING. My customer email screening watches this same Inbox and adds every email sent from my customer domains ({{CUSTOMER_DOMAINS}}, including their subdomains). If the sender's email address is at one of these domains, stop here: add nothing, leave the email unread and unchanged, and write nothing to the feed, because the customer screening records this email. Otherwise continue.",
+    "2 - READ the email that started this run and enough of its thread to understand the current ask (typically the last few messages). Note who sent it, who else is on it, whether it continues a thread already on the dashboard, and whether I have already answered.",
+    "3 - SKIP (add nothing) when it asks nothing of me: marketing, promotions and newsletters; broad announcements, digests and invitations sent to large distribution lists; automated notices, receipts, alerts and system messages; calendar responses, updates and cancellations with no ask; out-of-office and delivery notices; thank-you, acknowledgement and reply-all chatter; FYIs where I am only copied. If it continues a thread already on the dashboard, add it only when it brings a NEW ask of me; otherwise skip it and say in the run note whether the existing draft is now out of date. A VIP name, a high-importance flag or unread status alone never qualifies.",
+    "4 - " + qualify("the email"),
+    "5 - " + research("email"),
+    "6 - RECORD. " + FEED_FILE + " Add nothing if an item with the same id already exists. Otherwise " + APPEND_RULE + " Object shape: " + EMAIL_SHAPE,
+    "7 - READ OR UNREAD. Leave every added email unread. For a skipped email, mark it as read when it is marketing, a newsletter, a broad announcement or an automated notice with nothing left for me to do. Leave it unread when it comes from a customer domain ({{CUSTOMER_DOMAINS}}), when it is personal, when it is encrypted or protected, or when it still holds an action for me (an RSVP, a form, a deadline). Say which you did in the run note.",
     "",
     refresh(
       "email",
@@ -118,26 +119,30 @@
       "<sender name>",
       "<12 words or fewer: why it was added or skipped, and read or unread>",
       "you added an item",
-    ),
+    ) +
+      " The one exception is an email you stopped on at step 1: write nothing for it, because the customer email screening records it.",
     "",
     noStall("the feed"),
     "",
-    "LIMITS. Do not send, reply, forward, delete, move, flag, categorize, accept or decline anything, and do not create Outlook drafts; marking a skipped email as read under step 6 is the only change you may make in my mailbox. The feed file is the only file you change. I review, edit and send replies myself from the dashboard. Teams is handled separately; ignore it here.",
+    "LIMITS. Do not send, reply, forward, delete, move, flag, categorize, accept or decline anything, and do not create Outlook drafts; marking a skipped email as read under step 7 is the only change you may make in my mailbox. The feed file is the only file you change. I review, edit and send replies myself from the dashboard. Teams is handled separately; ignore it here.",
     "",
-    'Finish with exactly one line: "Added: <subject> (<priority>)" or "Skipped: <short reason>; <marked read | left unread because ...>",' + FINISH_REFRESH,
+    'Finish with exactly one line: "Added: <subject> (<priority>)" or "Skipped: <short reason>; <marked read | left unread because ...>",' +
+      FINISH_REFRESH +
+      ' If you stopped at step 1, finish instead with exactly this line: "Customer email: left for the customer email screening".',
   ].join("\n");
 
   const CUSTOMER_SCREENING = [
     ACT_AS +
-      " A new email just arrived in my Inbox > Important folder, where my Outlook rule files every email from my customer accounts ({{CUSTOMER_NAMES}}; domains {{CUSTOMER_DOMAINS}}). Customer work is my top priority, so EVERY customer email goes on my private COS Communications Dashboard. This run is read-and-prepare only.",
+      " A new email just arrived in my Inbox. This automation handles only email from my customer accounts ({{CUSTOMER_NAMES}}; domains {{CUSTOMER_DOMAINS}}, including their subdomains). Customer work is my top priority, so EVERY customer email goes on my private COS Communications Dashboard. This run is read-and-prepare only.",
     "",
-    "1 - READ the email and enough of its thread to understand it. Note who sent it, who else is on it (flag every external recipient), and whether I have already answered.",
-    "2 - ADD IT, ALWAYS. Add every email sent by a person at a customer domain, including FYIs, thank-yous and threads I have already answered. Only the same-id rule prevents a duplicate. Automated no-reply messages from a customer's systems may be skipped; say so in the run note. Priority: high = a customer ask with a commitment, an executive ask, a deadline within 2 business days, or a material risk; medium = other asks with a near-term need; low = nothing is asked of me (say so in the summary, and say when I have already replied).",
-    "3 - " +
+    "1 - CUSTOMERS ONLY. If the sender's email address is not at one of my customer domains, stop here: my email screening handles it. Add nothing, change nothing in my mailbox, and write nothing to the feed, because the email screening records this email. Otherwise continue.",
+    "2 - READ the email and enough of its thread to understand it. Note who sent it, who else is on it (flag every external recipient), and whether I have already answered.",
+    "3 - ADD IT, ALWAYS. Add every email sent by a person at a customer domain, including FYIs, thank-yous and threads I have already answered. Only the same-id rule prevents a duplicate. Automated no-reply messages from a customer's systems may be skipped; say so in the run note. Priority: high = a customer ask with a commitment, an executive ask, a deadline within 2 business days, or a material risk; medium = other asks with a near-term need; low = nothing is asked of me (say so in the summary, and say when I have already replied).",
+    "4 - " +
       research("email") +
       "\nCustomer replies cite public sources only. When nothing is asked of me, write a short, warm acknowledgement I can send or ignore.",
-    "4 - RECORD. " + FEED_FILE + " Add nothing if an item with the same id already exists. Otherwise " + APPEND_RULE + " Object shape: " + EMAIL_SHAPE,
-    "5 - NEVER MARK CUSTOMER EMAIL AS READ. Leave this email unread, and do not move, flag or change it in any way.",
+    "5 - RECORD. " + FEED_FILE + " Add nothing if an item with the same id already exists. Otherwise " + APPEND_RULE + " Object shape: " + EMAIL_SHAPE,
+    "6 - NEVER MARK CUSTOMER EMAIL AS READ. Leave this email unread, and do not move, flag or change it in any way.",
     "",
     refresh(
       "email",
@@ -145,13 +150,16 @@
       "<sender name>",
       "<12 words or fewer: customer email, what was added or why skipped; left unread>",
       "you added an item",
-    ),
+    ) +
+      " The one exception is an email you stopped on at step 1: write nothing for it, because the email screening records it.",
     "",
     noStall("the feed"),
     "",
     "LIMITS. Do not send, reply, forward, delete, move, flag, mark as read, categorize, accept or decline anything, and do not create Outlook drafts. The feed file is the only file you change. I review, edit and send replies myself from the dashboard.",
     "",
-    'Finish with exactly one line: "Added: <subject> (<priority>)" or "Skipped: <short reason>; left unread",' + FINISH_REFRESH,
+    'Finish with exactly one line: "Added: <subject> (<priority>)" or "Skipped: <short reason>; left unread",' +
+      FINISH_REFRESH +
+      ' If you stopped at step 1, finish instead with exactly this line: "Not a customer email: left for the email screening".',
   ].join("\n");
 
   const KEY_CHAT = [
@@ -349,7 +357,7 @@
       file: "04-email-screening.md",
       step: "Step 4",
       title: "Screen every email into the dashboard",
-      why: "Every new email gets one decision: add it with a researched draft, or skip it with a reason. Marketing and no-ask mail is marked read; customer, personal and still-open items stay unread.",
+      why: "Every new email gets one decision: add it with a researched draft, or skip it with a reason. Marketing and no-ask mail is marked read; personal and still-open items stay unread. Customer email is left to Step 5.",
       where: "Stay in the same task. Paste the prompt, check the instructions Cowork shows you, then approve the automation.",
       text: wrap(
         'Create an automation named "COS Comms Dashboard \u2014 Email screening". Trigger: every time a new email arrives in my Inbox. Run each email in its own separate session. Use exactly the instructions between the lines below, and show them to me before you turn the automation on. When you ask for permissions, include marking messages as read, so runs never wait for me.',
@@ -361,10 +369,10 @@
       file: "05-customer-email-screening.md",
       step: "Step 5",
       title: "Never miss a customer email",
-      why: "Customer email gets its own Outlook folder and its own automation, so every customer message reaches the dashboard and nothing from a customer is quietly marked as read.",
-      where: "Stay in the same task. Approve the Outlook rule when Cowork shows it, then approve the automation.",
+      why: "Customer email gets its own automation, so every customer message reaches the dashboard and nothing from a customer is quietly marked as read. It watches your Inbox directly, so there's no Outlook folder or rule to set up.",
+      where: "Stay in the same task. Paste the prompt, check the instructions Cowork shows you, then approve the automation.",
       text: wrap(
-        'First, create an Outlook rule named "COS customer email to Important" that moves every email from these domains into a folder named "Important" under my Inbox (create the folder if it does not exist): {{CUSTOMER_DOMAINS}}. Show me the rule before you create it.\n\nThen create an automation named "COS Comms Dashboard \u2014 Customer email screening (Important folder)". Trigger: every time a new email arrives in my Inbox > Important folder. Run each email in its own separate session. Use exactly the instructions between the lines below, and show them to me before you turn the automation on.',
+        'Create an automation named "COS Comms Dashboard \u2014 Customer email screening". Trigger: every time a new email arrives in my Inbox. It reads my Inbox directly, so do not create an Outlook folder or rule for it. Run each email in its own separate session. Use exactly the instructions between the lines below, and show them to me before you turn the automation on.',
         CUSTOMER_SCREENING,
       ),
     },
@@ -459,6 +467,7 @@
         "- Anything added that should have been skipped, or skipped that should have been added",
         "- Any email marked as read that should have stayed unread",
         "- Any customer message missing from the dashboard",
+        "- Any email added twice, or recorded by neither email screening",
         "- Any draft that commits me to something, lacks research or is missing the signature line",
         "- Any run that failed, stalled or did not refresh the dashboard",
         "",
@@ -497,9 +506,9 @@
     feed: "Open OneDrive and check that Documents \u203a Cowork \u203a {{FEED_FOLDER}} holds comms-feed.json, teams-sweep.json and my-tasks.json.",
     "cowork-app": "Open the link Cowork returns and bookmark it. The app reads the same feed, so you can use it and the website side by side.",
     email:
-      "Open Cowork Automations and confirm \u201cCOS Comms Dashboard \u2014 Email screening\u201d is active. Editing an automation pauses it, so re-activate it after every change. Your next email is the test: the dashboard's Latest check should show it within a minute or two.",
+      "Open Cowork Automations and confirm \u201cCOS Comms Dashboard \u2014 Email screening\u201d is active. Editing an automation pauses it, so re-activate it after every change. Your next email is the test: the dashboard's Latest check should show it within a minute or two. This screening leaves customer email to Step 5, so do Step 5 next.",
     customer:
-      "Approve the Outlook rule (or create it yourself in Outlook under Settings \u203a Mail \u203a Rules), then confirm the customer screening automation is active.",
+      "Open Cowork Automations and confirm \u201cCOS Comms Dashboard \u2014 Customer email screening\u201d is active. Both email screenings start on every new email, and each one stops at once on email that belongs to the other, so nothing is added twice. Your next customer email is the test: it should appear on the dashboard and stay unread in Outlook.",
     keychat:
       "Confirm there is one active automation per person. The next message from one of them is your test: it should appear on the dashboard and in your self-chat.",
     sweep:

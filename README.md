@@ -60,7 +60,8 @@ Open the **setup guide** (`setup.html`) and follow Steps 1 to 7. It fills your d
 2. **Private feed.** Cowork creates the folder and files in your OneDrive.
 3. **Open the dashboard.** Connect it one of three ways (below).
 4. **Email screening.** Every new email is added with a draft or skipped with a reason.
-5. **Customer email.** An Outlook rule plus its own screening, so every customer email lands on the dashboard.
+5. **Customer email.** Its own screening watches your Inbox, so every customer email lands on the dashboard. No
+   Outlook folder or rule to set up.
 6. **Key people.** Instant capture and a private self-chat alert for the few people who can't wait.
 7. **Teams sweep.** A scheduled sweep of every chat, every customer message, every @mention and every unread
    one-on-one chat.

@@ -13,6 +13,7 @@ Then review the last 50 runs and tell me:
 - Anything added that should have been skipped, or skipped that should have been added
 - Any email marked as read that should have stayed unread
 - Any customer message missing from the dashboard
+- Any email added twice, or recorded by neither email screening
 - Any draft that commits me to something, lacks research or is missing the signature line
 - Any run that failed, stalled or did not refresh the dashboard
 
