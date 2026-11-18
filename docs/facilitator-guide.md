@@ -7,12 +7,11 @@ their details into every prompt.
 ## Send this a few days before
 
 - Confirm they have Microsoft 365 Copilot with Cowork, including automations (event triggers and scheduled tasks).
-- Ask them to sync OneDrive to their computer and use Microsoft Edge or Google Chrome.
 - Ask them to bring: their top 3 to 5 business priorities, their customer accounts and email domains, the
   3 to 6 people whose requests matter most, and the 2 to 4 people whose messages can't wait.
-- Optional: if they want **Send** in the browser, ask IT for the one-time app registration in
-  [`microsoft-365-sign-in.md`](microsoft-365-sign-in.md). Otherwise they can use the folder mode or build the
-  app inside Cowork (Step 3).
+- Decide how they'll open the dashboard (Step 3). Option A: Cowork builds it as a private app, no IT needed.
+  Option B: this website, after IT does the one-time app registration in
+  [`microsoft-365-sign-in.md`](microsoft-365-sign-in.md). If they want B, ask IT a few days ahead.
 
 ## Agenda
 
@@ -21,7 +20,7 @@ their details into every prompt.
 | 0:00 | **Show the end state.** Open the dashboard with `?demo`. Walk through My tasks, Latest check, a high-priority customer item, **See original**, its research notes, **Show draft reply** with its highlighted placeholders, filling them in, Send with undo (and the **Send anyway?** check), **Open draft in Outlook** for an external reply, Mark Complete and the filters. | They can say what they'll get. |
 | 0:05 | **Step 1: constitution.** New Cowork task named *COS Email and Teams Dashboard*; paste Prompt 1 and refine it together. | Cowork confirms how it will operate. |
 | 0:15 | **Customize once + Step 2.** Fill in their details on the setup page, then create the private feed. | The three files exist in OneDrive. |
-| 0:20 | **Step 3: open the dashboard.** Connect with the OneDrive folder (or sign in). | The dashboard shows "No checks recorded yet". |
+| 0:20 | **Step 3: open the dashboard.** Option A: paste the Step 3 prompt and let Cowork build the app. Option B: sign in on the website with the app ID from IT. | The dashboard shows "No checks recorded yet". |
 | 0:25 | **Steps 4 and 5: email.** Create the email screening and the customer email screening (both watch the Inbox; no Outlook rule needed). Send them a test email that asks a question. | Latest check shows the test email, with a draft. |
 | 0:40 | **Steps 6 and 7: Teams.** Create the key-person alerts and the scheduled sweep. Ask a colleague to message them. | The alert lands in their self-chat and on the dashboard. |
 | 0:55 | **Wrap up.** Editing pauses automations; how to read Recent checks; Copilot Credits and `/cost`; book a 30-minute follow-up in a week for Step 10 (audit) and tuning. | Follow-up is on the calendar. |
@@ -40,7 +39,7 @@ their details into every prompt.
 |---|---|
 | A run waits for an approval and the dashboard goes stale | Approve it in Cowork, then run Step 9 so future runs edit files directly. |
 | An automation stopped after an edit | Editing pauses automations. Re-activate it in Cowork Automations. |
-| "Couldn't find your feed" | They picked the wrong folder, or Step 2 didn't run. Pick `Documents › Cowork › COS Comms Dashboard`. |
+| "Couldn't find your feed" | Step 2 didn't run, or the feed folder in Settings doesn't match. The default is `Documents/Cowork/COS Comms Dashboard`. |
 | Too many low-value items | Run the weekly tuning prompt and tighten the SKIP rules. |
 | Credits higher than expected | Keep marketing out of the Inbox with Outlook rules, or run the Teams sweep hourly. |
 

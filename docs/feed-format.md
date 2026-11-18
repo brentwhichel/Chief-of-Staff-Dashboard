@@ -100,7 +100,7 @@ Written only by the dashboard. Keys are item ids.
 }
 ```
 
-`manual` means you sent the reply yourself in Outlook or Teams and marked it replied on the dashboard.
+`manual` appears only in state saved by earlier versions: it meant you sent the reply yourself in Outlook or Teams and marked it replied on the dashboard.
 
 ## my-tasks.json
 

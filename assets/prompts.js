@@ -330,10 +330,10 @@
     },
     {
       id: "cowork-app",
-      file: "03-optional-build-the-app-inside-cowork.md",
-      step: "Step 3 (optional)",
-      title: "Or build the same dashboard inside Cowork",
-      why: "Prefer an app that lives in Cowork instead of this website? Cowork can rebuild the original app from this repository. Its Send button uses your own Outlook and Teams connections, so no IT app registration is needed.",
+      file: "03-build-the-app-inside-cowork.md",
+      step: "Step 3, option A",
+      title: "Build your dashboard inside Cowork",
+      why: "Step 3 has two options; this prompt is option A. Cowork builds your own private copy of the dashboard app from this repository. Its Send button uses your own Outlook and Teams connections, so no IT app registration is needed. Option B is the website with Microsoft 365 sign-in, which needs a one-time app registration from IT and no prompt.",
       where: "Stay in the same Cowork task and paste this prompt. Approve the Outlook, Teams and OneDrive connections when Cowork asks.",
       text: [
         'Build my COS Communications Dashboard as an App Builder app named "COS Communications Dashboard".',
@@ -504,7 +504,7 @@
     constitution:
       "Ask Cowork to pressure-test it: \u201cReview the constitution like an experienced executive operator and return a tightened version I can approve.\u201d Keep everything below in this same Cowork task so every automation shares it.",
     feed: "Open OneDrive and check that Documents \u203a Cowork \u203a {{FEED_FOLDER}} holds comms-feed.json, teams-sweep.json and my-tasks.json.",
-    "cowork-app": "Open the link Cowork returns and bookmark it. The app reads the same feed, so you can use it and the website side by side.",
+    "cowork-app": "Open the link Cowork returns and bookmark it. It reads the same feed as the website, so you can switch to option B later.",
     email:
       "Open Cowork Automations and confirm \u201cCOS Comms Dashboard \u2014 Email screening\u201d is active. Editing an automation pauses it, so re-activate it after every change. Your next email is the test: the dashboard's Latest check should show it within a minute or two. This screening leaves customer email to Step 5, so do Step 5 next.",
     customer:

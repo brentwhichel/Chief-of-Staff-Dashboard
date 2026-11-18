@@ -6,10 +6,9 @@
  * latest check, and a day-by-day timeline of emails and Teams chats with a
  * researched draft reply for each one.
  *
- * Three ways to connect, all private to the person using the page:
- *   - folder: the OneDrive folder synced to this computer (no sign-in)
- *   - graph:  Microsoft 365 sign-in (reads OneDrive, sends from Outlook/Teams)
- *   - demo:   fictional sample data, nothing saved or sent
+ * Two ways to connect, both private to the person using the page:
+ *   - graph: Microsoft 365 sign-in (reads OneDrive, sends from Outlook/Teams)
+ *   - demo:  fictional sample data, nothing saved or sent
  */
 (function () {
   "use strict";
@@ -158,12 +157,10 @@
     info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
     settings:
       '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
-    "folder-open":
-      '<path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/>',
+    app: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
     "log-in":
       '<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/>',
     play: '<polygon points="6 3 20 12 6 21 6 3"/>',
-    copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
     search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
     "file-text":
       '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
@@ -413,43 +410,16 @@
   }
 
   // ---------------------------------------------------------------------------
-  // IndexedDB - remembers which OneDrive folder this browser may open.
+  // Earlier versions could open a OneDrive folder synced to the computer and
+  // remembered it in IndexedDB. That option is gone; forget the saved folder.
   // ---------------------------------------------------------------------------
 
-  function idbOpen() {
-    return new Promise((resolve, reject) => {
-      if (!("indexedDB" in window)) return reject(new Error("no indexedDB"));
-      const req = indexedDB.open("cos-dashboard", 1);
-      req.onupgradeneeded = () => req.result.createObjectStore("kv");
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-  }
-  async function idbGet(key) {
-    const db = await idbOpen();
-    return new Promise((resolve, reject) => {
-      const req = db.transaction("kv", "readonly").objectStore("kv").get(key);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-  }
-  async function idbSet(key, value) {
-    const db = await idbOpen();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction("kv", "readwrite");
-      tx.objectStore("kv").put(value, key);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-  async function idbDel(key) {
-    const db = await idbOpen();
-    return new Promise((resolve) => {
-      const tx = db.transaction("kv", "readwrite");
-      tx.objectStore("kv").delete(key);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => resolve();
-    });
+  function forgetSavedFolder() {
+    try {
+      if ("indexedDB" in window) indexedDB.deleteDatabase("cos-dashboard");
+    } catch (e) {
+      /* nothing saved */
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -555,7 +525,6 @@
     if (error instanceof DashError) {
       if (error.kind === "not-found") return "missing";
       if (error.kind === "denied") return "denied";
-      if (error.kind === "unavailable") return "unavailable";
     }
     return "failed";
   }
@@ -563,7 +532,6 @@
   class DemoBackend {
     constructor() {
       this.kind = "demo";
-      this.sendMode = "send";
       this.label = "Demo data (fictional)";
       this.data = DEMO.build(Date.now());
     }
@@ -608,57 +576,6 @@
     forget() {
       sessionStorage.removeItem("cos-demo:" + STATE_NAME);
       sessionStorage.removeItem("cos-demo:" + TASKS_NAME);
-    }
-  }
-
-  class FolderBackend {
-    constructor(dir) {
-      this.kind = "folder";
-      this.sendMode = "copy";
-      this.dir = dir;
-      this.label = "OneDrive folder \u201c" + dir.name + "\u201d on this computer";
-    }
-    async ownerEmail() {
-      return "";
-    }
-    async handle(name, create) {
-      try {
-        return await this.dir.getFileHandle(name, { create: !!create });
-      } catch (e) {
-        if (e && (e.name === "NotFoundError" || e.name === "TypeMismatchError")) return null;
-        throw e;
-      }
-    }
-    async readFeed(prev) {
-      const fh = await this.handle(FEED_NAME);
-      if (!fh) throw new DashError("feed", "feed-missing");
-      const file = await fh.getFile();
-      const version = file.lastModified + ":" + file.size;
-      if (prev && prev === version) return { unchanged: true, version: version };
-      return { json: C.parseJsonText(await file.text()), version: version };
-    }
-    async readFile(name) {
-      const fh = await this.handle(name);
-      if (!fh) return null;
-      const file = await fh.getFile();
-      const text = await file.text();
-      return { json: text.trim() ? C.parseJsonText(text) : null, version: file.lastModified + ":" + file.size };
-    }
-    async writeFile(name, value, expected) {
-      const fh = await this.handle(name, true);
-      if (expected) {
-        const current = await fh.getFile();
-        if (current.lastModified + ":" + current.size !== expected) throw conflictError();
-      }
-      const writable = await fh.createWritable();
-      await writable.write(JSON.stringify(value, null, 1));
-      await writable.close();
-      const saved = await fh.getFile();
-      return saved.lastModified + ":" + saved.size;
-    }
-    async readOriginal() {
-      // A OneDrive folder holds only the feed; the original stays in Outlook or Teams.
-      throw new DashError("unavailable", "folder-mode");
     }
   }
 
@@ -711,7 +628,6 @@
   class GraphBackend {
     constructor(app, account) {
       this.kind = "graph";
-      this.sendMode = "send";
       this.app = app;
       this.account = account;
       this.label = "Microsoft 365 as " + (account.username || account.name || "you");
@@ -942,7 +858,6 @@
     inferredOwner: "",
     people: C.makePeople("", domainsSetting()),
     connectError: null,
-    reconnectHandle: null,
     timers: [],
     originals: new Map(), // "See original" results for this visit, by item id
   };
@@ -1307,9 +1222,7 @@
   // ----- connect screen -----
 
   function ConnectView() {
-    const folderOk = typeof window.showDirectoryPicker === "function";
     const errorHost = h("div");
-    const folderBtn = h("button", { type: "button", class: "btn btn-default btn-md", onclick: () => chooseFolder() });
     const signInBtn = h("button", { type: "button", class: "btn btn-default btn-md", onclick: () => signIn() }, icon("log-in"), "Sign in");
     const signInNote = h("p", { class: "option-note" });
     const settingsLink = h(
@@ -1330,24 +1243,11 @@
         h(
           "p",
           { class: "connect-intro" },
-          "Your COS automations in Cowork write a private feed of the emails and Teams chats that need you to your OneDrive. Choose how this page reads it. Your data goes only between this browser and your own Microsoft 365; nothing is stored on this website.",
+          "Your COS automations in Cowork write a private feed of the emails and Teams chats that need you to your OneDrive. Sign in to see it here and send the replies you approve. Your data goes only between this browser and your own Microsoft 365; nothing is stored on this website.",
         ),
         h(
           "div",
           { class: "connect-grid" },
-          h(
-            "div",
-            { class: "option" },
-            h("span", { class: "option-icon" }, icon("folder-open")),
-            h("h3", null, "Open my OneDrive folder"),
-            h(
-              "p",
-              null,
-              "No sign-in or IT setup. Pick the synced Documents \u203a Cowork \u203a COS Comms Dashboard folder on this computer. Replies are copied so you can paste and send them in Outlook or Teams.",
-            ),
-            folderBtn,
-            folderOk ? null : h("p", { class: "option-note" }, "Needs Microsoft Edge or Google Chrome on a computer."),
-          ),
           h(
             "div",
             { class: "option" },
@@ -1356,10 +1256,22 @@
             h(
               "p",
               null,
-              "The full experience: reads your feed straight from OneDrive and sends replies from your own Outlook and Teams after a 5-second undo.",
+              "Reads your feed straight from OneDrive and sends replies from your own Outlook and Teams after a 5-second undo.",
             ),
             h("div", { style: "display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center" }, signInBtn, settingsLink),
             signInNote,
+          ),
+          h(
+            "div",
+            { class: "option" },
+            h("span", { class: "option-icon" }, icon("app")),
+            h("h3", null, "No app ID? Build it in Cowork"),
+            h(
+              "p",
+              null,
+              "Cowork can build you the same dashboard as a private app that sends through your own Outlook and Teams connections. No IT setup.",
+            ),
+            h("a", { class: "btn btn-outline btn-md", href: CONFIG.setupGuideUrl + "#step-dashboard" }, icon("book-open"), "Show me how"),
           ),
           h(
             "div",
@@ -1382,9 +1294,6 @@
     );
 
     function update() {
-      const reconnect = S.reconnectHandle;
-      fill(folderBtn, icon("folder-open"), reconnect ? "Reconnect \u201c" + reconnect.name + "\u201d" : "Choose folder");
-      folderBtn.disabled = !folderOk;
       const hasClient = !!String(pick("clientId") || "").trim();
       signInBtn.disabled = !hasClient;
       settingsLink.hidden = hasClient;
@@ -1825,9 +1734,6 @@
             stateSig = sig;
             const acts = [h("button", { type: "button", class: "btn btn-outline btn-md", onclick: () => loadFeed(true) }, "Try again")];
             if (missing) acts.push(h("a", { class: "btn btn-outline btn-md", href: CONFIG.setupGuideUrl }, icon("book-open"), "Setup guide"));
-            if (S.backend && S.backend.kind === "folder") {
-              acts.push(h("button", { type: "button", class: "btn btn-outline btn-md", onclick: () => chooseFolder() }, icon("folder-open"), "Choose a different folder"));
-            }
             setMode(
               sig,
               StateBlock(
@@ -1835,8 +1741,8 @@
                 missing ? "Couldn't find your feed" : "Couldn't load your messages",
                 missing
                   ? "There's no comms-feed.json in " +
-                      (S.backend && S.backend.kind === "folder" ? "this folder" : pick("feedFolder")) +
-                      " yet. Turn on your COS automations with the setup guide, then try again."
+                      pick("feedFolder") +
+                      " yet. Run Step 2 of the setup guide, or check the feed folder in Settings, then try again."
                   : "Check your connection, then try again.",
                 acts,
               ),
@@ -2213,7 +2119,7 @@
     }
 
     extras() {
-      if (this.item.channel !== "email" || this.replyAll || S.backend.sendMode !== "send") return [];
+      if (this.item.channel !== "email" || this.replyAll) return [];
       const out = [];
       for (const p of this.people()) {
         const line = this.chosen[p.email.toLowerCase()];
@@ -2465,23 +2371,6 @@
     originalProblemNode(problem) {
       const item = this.item;
       const email = item.channel === "email";
-      if (problem === "unavailable") {
-        const link = C.safeUrl(item.webLink);
-        return h(
-          "div",
-          { class: "original-state" },
-          h(
-            "span",
-            { class: "muted" },
-            "This page reads your feed from a OneDrive folder, so it can't open your " +
-              (email ? "mailbox" : "chats") +
-              ". Sign in with Microsoft 365 to see originals here.",
-          ),
-          link
-            ? h("a", { class: "btn btn-outline btn-sm", href: link, target: "_blank", rel: "noopener noreferrer" }, icon("external-link"), "Open in " + (email ? "Outlook" : "Teams"))
-            : null,
-        );
-      }
       let text;
       if (problem === "missing") text = email ? "This email was moved or deleted, so it can't be shown here." : "This Teams message is no longer available.";
       else if (problem === "denied") {
@@ -2557,18 +2446,13 @@
       const o = this.outside();
       this.paintBlocked(o);
       if (this.props.sent) return;
-      const mode = S.backend.sendMode;
       const counting = this.phase.kind === "countdown";
       const sending = this.phase.kind === "sending";
       this.undoBtn.hidden = !counting;
       this.sendBtn.hidden = counting;
       if (counting) fill(this.undoBtn, icon("rotate-ccw"), "Undo (" + this.secondsLeft + ")");
-      if (this.changed("send", [mode, sending])) {
-        fill(this.sendBtn, 
-          sending ? spinner("Sending") : icon(mode === "copy" ? "copy" : "send"),
-          mode === "copy" ? "Copy & open" : "Send",
-        );
-        this.sendBtn.title = mode === "copy" ? "Copy this reply and open the message so you can paste and send it" : "";
+      if (this.changed("send", [sending])) {
+        fill(this.sendBtn, sending ? spinner("Sending") : icon("send"), "Send");
       }
       this.sendBtn.className = "btn btn-md " + (o.blocked ? "btn-outline" : "btn-default");
       this.sendBtn.disabled = !this.text.trim() || sending || o.blocked;
@@ -2600,7 +2484,7 @@
       if (item.channel !== "email" || !S.backend) return { outsiders: [], blocked: false, outlook: null };
       const replyTo = S.people.replyAddresses(item, this.replyAll, this.extras());
       const outsiders = replyTo.to.concat(replyTo.cc).filter((e) => S.people.isExternal(e));
-      const blocked = S.backend.sendMode === "send" && outsideRepliesSetting() === "outlook" && outsiders.length > 0;
+      const blocked = outsideRepliesSetting() === "outlook" && outsiders.length > 0;
       const outlook =
         !this.props.sent && (blocked || S.people.hasExternalParticipants(item)) ? C.outlookDraftLink(replyTo, item.subject, this.text) : null;
       return { outsiders: outsiders, blocked: blocked, outlook: outlook };
@@ -2713,7 +2597,7 @@
 
     paintAddPeople() {
       const item = this.item;
-      const show = item.channel === "email" && !this.props.sent && !this.replyAll && S.backend.sendMode === "send";
+      const show = item.channel === "email" && !this.props.sent && !this.replyAll;
       this.addWrap.hidden = !show;
       if (!show) return;
       const extras = this.extras();
@@ -2872,20 +2756,18 @@
     /* Placeholders still in brackets get one last look before the reply goes out. */
     async requestSend(mode) {
       if (!this.text.trim() || this.busy() || this.outside().blocked) return;
-      if (S.backend.sendMode === "send") {
-        const pending = C.findPlaceholders(this.text);
-        if (pending.length > 0) {
-          const unique = Array.from(new Set(pending));
-          const listed = unique.slice(0, 5).join("  ");
-          const more = unique.length > 5 ? " and " + (unique.length - 5) + " more" : "";
-          const ok = await confirmDialog({
-            title: "Send with " + C.placeholderCountLabel(pending.length) + " still in brackets?",
-            description: "Not filled in yet: " + listed + more,
-            confirmLabel: "Send anyway",
-            cancelLabel: "Keep editing",
-          });
-          if (!ok) return;
-        }
+      const pending = C.findPlaceholders(this.text);
+      if (pending.length > 0) {
+        const unique = Array.from(new Set(pending));
+        const listed = unique.slice(0, 5).join("  ");
+        const more = unique.length > 5 ? " and " + (unique.length - 5) + " more" : "";
+        const ok = await confirmDialog({
+          title: "Send with " + C.placeholderCountLabel(pending.length) + " still in brackets?",
+          description: "Not filled in yet: " + listed + more,
+          confirmLabel: "Send anyway",
+          cancelLabel: "Keep editing",
+        });
+        if (!ok) return;
       }
       this.startSend(mode);
     }
@@ -2893,10 +2775,6 @@
     startSend(mode) {
       const body = this.text.trim();
       if (!body || this.busy() || this.outside().blocked) return;
-      if (S.backend.sendMode === "copy") {
-        this.copyAndOpen(body);
-        return;
-      }
       this.textAtSend = body;
       this.extrasAtSend = this.extras();
       if (this.dirty) {
@@ -2957,30 +2835,6 @@
         this.phase = e instanceof DashError && e.kind === "not-found" && item.channel === "email" ? { kind: "missing" } : { kind: "error" };
         this.paintDraft();
       }
-    }
-
-    copyAndOpen(body) {
-      const item = this.item;
-      const ok = copyText(body);
-      const link = C.safeUrl(item.webLink);
-      if (link) window.open(link, "_blank", "noopener,noreferrer");
-      if (this.dirty) {
-        this.dirty = false;
-        actions.saveDraft(item, this.text);
-      }
-      const where = item.channel === "email" ? "Outlook" : "Teams";
-      const how = item.channel === "email" ? (this.replyAll ? "a Reply all" : "a Reply") : "the chat";
-      toast(ok ? "Reply copied" : "Couldn't copy the reply", {
-        kind: ok ? "success" : "error",
-        description: ok
-          ? "Paste it into " + how + " in " + where + ", then mark it replied here."
-          : "Select the draft and copy it yourself, then reply in " + where + ".",
-        duration: 12000,
-        action: {
-          label: "Mark replied",
-          onClick: () => actions.recordSent(item, { at: new Date().toISOString(), text: body, via: "manual" }),
-        },
-      });
     }
 
     commitDraft() {
@@ -3071,7 +2925,7 @@
           h(
             "button",
             { type: "button", class: "btn btn-outline btn-sm", onclick: () => disconnect(dlg) },
-            S.backend.kind === "graph" ? "Sign out" : S.backend.kind === "demo" ? "Leave demo" : "Disconnect",
+            S.backend.kind === "graph" ? "Sign out" : "Leave demo",
           ),
         )
       : h("p", { class: "field-help" }, "Not connected yet.");
@@ -3111,7 +2965,7 @@
           h(
             "p",
             { class: "field-help" },
-            "Needed only to read your feed from OneDrive and send replies from this page. ",
+            "Needed to read your feed from OneDrive and send replies from this page. ",
             h("a", { href: repoLink("docs/microsoft-365-sign-in.md"), class: "link", style: "font-size:inherit", target: "_blank", rel: "noopener" }, "How to get an app ID"),
           ),
           field("Application (client) ID", clientId),
@@ -3219,7 +3073,6 @@
     S.ownerEmail = "";
     S.inferredOwner = "";
     S.connectError = null;
-    S.reconnectHandle = null;
     S.originals = new Map();
     view = null;
     refreshPeople();
@@ -3247,7 +3100,6 @@
     S.feed = freshQuery();
     view = null;
     writeSettings({ mode: "" });
-    if (backend && backend.kind === "folder") await idbDel("folder").catch(() => {});
     if (backend && backend.kind === "demo") backend.forget();
     scheduleRender();
     if (backend && backend.kind === "graph" && msalApp) {
@@ -3262,65 +3114,6 @@
   function startDemo(remember) {
     if (remember) writeSettings({ mode: "demo" });
     connect(new DemoBackend());
-  }
-
-  async function locateFeedFolder(dir) {
-    const leaf = String(pick("feedFolder")).split("/").filter(Boolean).pop() || "COS Comms Dashboard";
-    const paths = [[], [leaf], ["Cowork", leaf], ["Documents", "Cowork", leaf]];
-    for (const path of paths) {
-      try {
-        let d = dir;
-        for (const segment of path) d = await d.getDirectoryHandle(segment);
-        await d.getFileHandle(FEED_NAME);
-        return d;
-      } catch (e) {
-        /* try the next likely location */
-      }
-    }
-    return null;
-  }
-
-  async function chooseFolder() {
-    if (typeof window.showDirectoryPicker !== "function") {
-      S.connectError = "Opening a folder needs Microsoft Edge or Google Chrome on a computer. Use Microsoft 365 sign-in or the demo instead.";
-      scheduleRender();
-      return;
-    }
-    const saved = S.reconnectHandle;
-    if (saved) {
-      try {
-        const perm = await saved.requestPermission({ mode: "readwrite" });
-        if (perm === "granted") {
-          writeSettings({ mode: "folder" });
-          connect(new FolderBackend(saved));
-          return;
-        }
-      } catch (e) {
-        /* fall through to a fresh pick */
-      }
-    }
-    let dir;
-    try {
-      dir = await window.showDirectoryPicker({ id: "cos-dashboard", mode: "readwrite", startIn: "documents" });
-    } catch (e) {
-      if (e && e.name === "AbortError") return;
-      S.connectError = "Couldn't open that folder. Try again.";
-      scheduleRender();
-      return;
-    }
-    const found = await locateFeedFolder(dir);
-    if (!found) {
-      S.connectError =
-        "There's no comms-feed.json in \u201c" +
-        dir.name +
-        "\u201d. Choose the COS Comms Dashboard folder inside Documents \u203a Cowork in your synced OneDrive, or follow the setup guide to create it.";
-      if (S.backend) toast.error("That folder doesn't have a COS feed.");
-      scheduleRender();
-      return;
-    }
-    await idbSet("folder", found).catch(() => {});
-    writeSettings({ mode: "folder" });
-    connect(new FolderBackend(found));
   }
 
   async function signIn() {
@@ -3368,19 +3161,11 @@
       }
     }
     if (mode === "folder") {
-      try {
-        const handle = await idbGet("folder");
-        if (handle) {
-          const perm = await handle.queryPermission({ mode: "readwrite" });
-          if (perm === "granted") {
-            connect(new FolderBackend(handle));
-            return;
-          }
-          S.reconnectHandle = handle;
-        }
-      } catch (e) {
-        console.error("Folder reconnect failed", e);
-      }
+      // This page used to open a OneDrive folder synced to the computer. That option is gone.
+      writeSettings({ mode: "" });
+      forgetSavedFolder();
+      S.connectError =
+        "This page no longer opens a OneDrive folder on your computer. Sign in with Microsoft 365 to see your feed and send replies here, or build the dashboard in Cowork.";
     }
     scheduleRender();
   }

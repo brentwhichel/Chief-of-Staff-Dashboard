@@ -1,11 +1,12 @@
-# Microsoft 365 sign-in (optional)
+# Microsoft 365 sign-in (Step 3, option B)
 
-The dashboard works without any sign-in: choose **Open my OneDrive folder** and pick the synced
-`Documents › Cowork › COS Comms Dashboard` folder in Microsoft Edge or Google Chrome.
+The website dashboard needs Microsoft 365 sign-in to show your feed and send replies. If you'd rather not
+involve IT, use option A instead: Cowork builds the same dashboard as a private app that sends through your
+own Outlook and Teams connections (see Step 3 of the setup guide).
 
-Signing in adds three things:
+Signing in gives you:
 
-- The feed is read straight from OneDrive, so the dashboard works on any computer, with nothing synced.
+- Your feed, read straight from OneDrive, in any browser, with nothing to sync.
 - **Send** works. Replies go out from your own Outlook and Teams after a 5-second undo, exactly like the
   original Cowork app.
 - **See original** shows the original email or Teams chat message right on the page, as plain text.

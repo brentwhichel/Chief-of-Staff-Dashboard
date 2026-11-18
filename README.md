@@ -15,8 +15,8 @@ delete it, and keep your own task list on the same page.
 - **Setup guide:** https://brentwhichel.github.io/Chief-of-Staff-Dashboard/setup.html
 
 Anyone can use the hosted dashboard with their own data. It runs entirely in your browser and connects only
-to your own OneDrive folder or Microsoft 365 account; nothing you open in it is sent to this site or this
-repository. You can also [publish your own copy](#publish-your-own-copy-on-github-pages).
+to your own Microsoft 365 account; nothing you open in it is sent to this site or this repository. You can
+also [publish your own copy](#publish-your-own-copy-on-github-pages).
 
 ## What you get
 
@@ -58,7 +58,7 @@ Open the **setup guide** (`setup.html`) and follow Steps 1 to 7. It fills your d
 
 1. **Constitution.** Tell Cowork how to act as your Chief of Staff.
 2. **Private feed.** Cowork creates the folder and files in your OneDrive.
-3. **Open the dashboard.** Connect it one of three ways (below).
+3. **Open the dashboard.** Build it in Cowork, or sign in on this website (below).
 4. **Email screening.** Every new email is added with a draft or skipped with a reason.
 5. **Customer email.** Its own screening watches your Inbox, so every customer email lands on the dashboard. No
    Outlook folder or rule to set up.
@@ -70,15 +70,18 @@ Then audit after the first week (Step 10) and tune weekly. The same prompts are 
 and [`docs/facilitator-guide.md`](docs/facilitator-guide.md) is a 60-minute plan for walking someone else
 through it.
 
-## Three ways to connect
+## Two ways to open the dashboard
 
-| | OneDrive folder | Microsoft 365 sign-in | Inside Cowork |
-|---|---|---|---|
-| Setup | None. Sync OneDrive, use Edge or Chrome | One-time app registration by IT ([steps](docs/microsoft-365-sign-in.md)) | Paste one prompt ([details](cowork-app/README.md)) |
-| Reads your feed | From the synced folder | From OneDrive | From OneDrive |
-| Replies | **Copy & open**: copies the draft and opens the message in Outlook or Teams | **Send** from your own Outlook and Teams | **Send** through your own connections |
-| See original | Opens the message in Outlook or Teams | Shown on the page | Shown in the app |
-| Works on | This computer | Any computer | Cowork |
+Both show the same dashboard, read the same feed and send the replies you approve. Pick one.
+
+| | A. Build it in Cowork | B. Use this website |
+|---|---|---|
+| Setup | Paste one prompt in Cowork ([details](cowork-app/README.md)) | One-time app registration by IT ([steps](docs/microsoft-365-sign-in.md)), then sign in |
+| Replies | **Send** through your own Outlook and Teams connections | **Send** from your own Outlook and Teams |
+| See original | Shown in the app | Shown on the page |
+| Where it opens | The link Cowork gives you | This website, in any browser |
+
+Replies that reach anyone outside your company open as a draft in Outlook in both, unless you change that setting.
 
 ## Publish your own copy on GitHub Pages
 
@@ -98,7 +101,7 @@ refresh the Markdown copies in `prompts/`.
 
 - No server, no analytics, no data in this repository. The page reads your feed in your browser and talks
   only to your own Microsoft 365 (`graph.microsoft.com`, `login.microsoftonline.com`) when you sign in.
-- Settings, the folder you picked, and sign-in tokens are stored only in your browser.
+- Settings and sign-in tokens are stored only in your browser.
 - Every piece of feed text is rendered as text, never as HTML, and only `http`, `https`, `mailto` and `tel`
   links become clickable.
 - `config.js` is public. Never put secrets or personal information in it; an application (client) ID is not
@@ -114,7 +117,7 @@ refresh the Markdown copies in `prompts/`.
 | `prompts/` | Every setup prompt as Markdown |
 | `docs/` | Feed format, Microsoft 365 sign-in, facilitator guide |
 | `starter-files/` | Empty copies of the four feed files |
-| `cowork-app/` | Source for the optional in-Cowork version of the dashboard |
+| `cowork-app/` | Source for the Cowork app version of the dashboard (Step 3, option A) |
 | `tools/build-prompts.js` | Rebuilds `prompts/` from `assets/prompts.js` |
 
 All names and companies in the demo are fictional.

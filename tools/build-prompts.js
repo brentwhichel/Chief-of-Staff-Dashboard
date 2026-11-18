@@ -51,6 +51,12 @@ for (const p of P.PROMPTS) {
   fs.writeFileSync(path.join(outDir, p.file), body.join("\n"));
   index.push("| " + p.step + " | [" + p.title + "](" + p.file + ") | " + p.why.replace(/\|/g, "\\|") + " |");
 }
-index.push("", "The automation prompts (Steps 4 to 7) include the exact feed format the dashboard reads; see `docs/feed-format.md`.", "");
+index.push(
+  "",
+  "Step 3, option B (this website with Microsoft 365 sign-in) needs no prompt: IT registers the website once; see `docs/microsoft-365-sign-in.md`.",
+  "",
+  "The automation prompts (Steps 4 to 7) include the exact feed format the dashboard reads; see `docs/feed-format.md`.",
+  "",
+);
 fs.writeFileSync(path.join(outDir, "README.md"), index.join("\n"));
 console.log("Wrote " + P.PROMPTS.length + " prompts to " + path.relative(process.cwd(), outDir));
