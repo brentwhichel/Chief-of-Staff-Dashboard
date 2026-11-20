@@ -8,7 +8,7 @@ Here, anything in [BRACKETS] is a placeholder to replace before you paste.
 |---|---|---|
 | Step 1 | [Install your Chief of Staff constitution](01-chief-of-staff-constitution.md) | Every automation below works "under my approved Chief of Staff constitution". This is where you define it. Skip this if you already have one in Cowork. |
 | Step 2 | [Create your private feed](02-create-the-private-feed.md) | The dashboard reads three small files in your OneDrive. Your automations write the feed; the dashboard keeps your tasks and what you've sent, completed or deleted. |
-| Step 3, option A | [Build your dashboard inside Cowork](03-build-the-app-inside-cowork.md) | Step 3 has two options; this prompt is option A. Cowork builds your own private copy of the dashboard app from this repository. Its Send button uses your own Outlook and Teams connections, so no IT app registration is needed. Option B is the website with Microsoft 365 sign-in, which needs a one-time app registration from IT and no prompt. |
+| Step 3 | [Build your dashboard app in Cowork](03-build-the-app-inside-cowork.md) | Your dashboard is a private app that Cowork builds for you from this repository, just like the original. It signs you in with your work account and sends the replies you approve through your own Outlook and Teams connections, so there's nothing for IT to set up. It stays empty until Step 4 runs. |
 | Step 4 | [Screen every email into the dashboard](04-email-screening.md) | Every new email gets one decision: add it with a researched draft, or skip it with a reason. Marketing and no-ask mail is marked read; personal and still-open items stay unread. Customer email is left to Step 5. |
 | Step 5 | [Never miss a customer email](05-customer-email-screening.md) | Customer email gets its own automation, so every customer message reaches the dashboard and nothing from a customer is quietly marked as read. It watches your Inbox directly, so there's no Outlook folder or rule to set up. |
 | Step 6 | [Instant alerts for the people who can't wait](06-key-person-chat-alerts.md) | One automation per key person. Their 1:1 Teams messages land on the dashboard right away, with a private heads-up in your own Teams self-chat. |
@@ -17,7 +17,5 @@ Here, anything in [BRACKETS] is a placeholder to replace before you paste.
 | Step 9 (only if you wrote your own rules) | [Prove it's running, and never stall](09-heartbeat-and-no-stalls.md) | Already built into Steps 4 to 7. A visible Last refreshed time proves the system is alive on quiet days, and direct file edits keep background runs from waiting hours for an approval nobody sees. |
 | Step 10 | [Audit the whole system](10-audit.md) | A regular audit catches wrong skips, missed customer messages and weak drafts before they cost trust. |
 | Keep improving | [Tune the dashboard every week](11-weekly-tuning.md) | The dashboard gets sharper every week as Cowork learns what you act on, edit and ignore. |
-
-Step 3, option B (this website with Microsoft 365 sign-in) needs no prompt: IT registers the website once; see `docs/microsoft-365-sign-in.md`.
 
 The automation prompts (Steps 4 to 7) include the exact feed format the dashboard reads; see `docs/feed-format.md`.

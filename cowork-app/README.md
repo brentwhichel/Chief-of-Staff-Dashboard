@@ -1,10 +1,10 @@
-# Build the dashboard inside Cowork (Step 3, option A)
+# Your dashboard app (Step 3)
 
 This folder holds the source of the original **COS Communications Dashboard** app, built in Cowork with
-App Builder. Pick it instead of the website (option B) when you don't want to involve IT: its **Send** button uses your
-own Office 365 Outlook and Microsoft Teams connections, so no IT app registration is needed.
+App Builder. In Step 3, Cowork builds your own private copy from it. Its **Send** button uses your own Office 365
+Outlook and Microsoft Teams connections, so no IT app registration is needed.
 
-The website (`index.html`) and this app read the same feed, so you can use both.
+Your dashboard is always this app in your own Microsoft 365. The demo on the setup site only shows sample data.
 
 ## Files
 

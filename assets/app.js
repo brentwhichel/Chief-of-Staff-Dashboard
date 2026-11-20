@@ -1,14 +1,13 @@
 /*
- * COS Communications Dashboard - page logic.
+ * COS Communications Dashboard - demo.
  *
- * Reads the private feed your COS automations write to OneDrive and shows it
- * exactly like the original COS Communications Dashboard app: My tasks, the
- * latest check, and a day-by-day timeline of emails and Teams chats with a
- * researched draft reply for each one.
+ * Shows exactly how the dashboard works, with sample data from a fictional
+ * company: My tasks, the latest check, and a day-by-day timeline of emails and
+ * Teams chats with a researched draft reply for each one.
  *
- * Two ways to connect, both private to the person using the page:
- *   - graph: Microsoft 365 sign-in (reads OneDrive, sends from Outlook/Teams)
- *   - demo:  fictional sample data, nothing saved or sent
+ * This page never signs in, never reads real mail, chats or files, and never
+ * sends anything. Each person's real dashboard is a private app that Cowork
+ * builds for them (Step 3 of the setup guide).
  */
 (function () {
   "use strict";
@@ -22,11 +21,6 @@
 
   const DEFAULTS = {
     appTitle: "COS Communications",
-    feedFolder: "Documents/Cowork/COS Comms Dashboard",
-    clientId: "",
-    tenantId: "organizations",
-    redirectUri: "",
-    internalDomains: [],
     timeZone: "",
     pollSeconds: 60,
     undoSeconds: 5,
@@ -35,17 +29,16 @@
     staleHours: 2,
     showResearchNotes: true,
     outsideReplies: "outlook",
-    msalUrl: "https://cdn.jsdelivr.net/npm/@azure/msal-browser@4/+esm",
     setupGuideUrl: "setup.html",
   };
   const CONFIG = Object.assign({}, DEFAULTS, window.COS_DASHBOARD_CONFIG || {});
 
-  const SETTINGS_KEY = "cos-dashboard.settings.v1";
+  // Its own key, so the demo never touches settings saved by other pages on this site.
+  const SETTINGS_KEY = "cos-dashboard.demo-settings.v1";
   const FEED_NAME = "comms-feed.json";
   const STATE_NAME = "dashboard-state.json";
   const TASKS_NAME = "my-tasks.json";
-  const GRAPH_ROOT = "https://graph.microsoft.com/v1.0";
-  const GRAPH_SCOPES = ["User.Read", "Files.ReadWrite", "Mail.Read", "Mail.Send", "Chat.Read", "ChatMessage.Send", "ChannelMessage.Send"];
+
 
   function readSettings() {
     try {
@@ -69,12 +62,6 @@
   function pick(key) {
     const v = settings[key];
     return v === undefined || v === null || v === "" ? CONFIG[key] : v;
-  }
-
-  function domainsSetting() {
-    const v = pick("internalDomains");
-    const list = Array.isArray(v) ? v : String(v || "").split(/[\s,;]+/);
-    return list.map((d) => String(d).trim().replace(/^@/, "")).filter(Boolean);
   }
 
   function showResearch() {
@@ -403,123 +390,10 @@
     }
   }
 
-  function conflictError() {
-    const e = new Error("conflict");
-    e.conflict = true;
-    return e;
-  }
-
   // ---------------------------------------------------------------------------
-  // Earlier versions could open a OneDrive folder synced to the computer and
-  // remembered it in IndexedDB. That option is gone; forget the saved folder.
+  // Sample data. Reads the fictional feed, keeps your changes in this browser
+  // tab only, and pretends to send.
   // ---------------------------------------------------------------------------
-
-  function forgetSavedFolder() {
-    try {
-      if ("indexedDB" in window) indexedDB.deleteDatabase("cos-dashboard");
-    } catch (e) {
-      /* nothing saved */
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Backends. Each one reads the feed, reads/writes the dashboard's own two
-  // files, and (where it can) sends replies:
-  //   readFeed(prevVersion) -> { json, version } | { unchanged, version }
-  //   readFile(name)        -> { json, version } | null when the file is missing
-  //   writeFile(name, value, expectedVersion) -> newVersion (throws conflict)
-  // ---------------------------------------------------------------------------
-
-  function emailHtml(text) {
-    return '<div style="font-family:Calibri,Arial,sans-serif;font-size:11pt">' + C.toHtml(text) + "</div>";
-  }
-
-  // ----- "See original": the original message, only ever shown as plain text -----
-
-  const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "HEAD", "TITLE", "META", "LINK", "NOSCRIPT", "TEMPLATE", "SVG", "IFRAME", "OBJECT", "ATTACHMENT"]);
-  const BLOCK_TAGS = new Set([
-    "ADDRESS", "ARTICLE", "ASIDE", "BLOCKQUOTE", "CENTER", "DD", "DIV", "DL", "DT", "FIELDSET", "FIGCAPTION", "FIGURE",
-    "FOOTER", "FORM", "H1", "H2", "H3", "H4", "H5", "H6", "HEADER", "HR", "LI", "MAIN", "NAV", "OL", "P", "PRE",
-    "SECTION", "TABLE", "TBODY", "TFOOT", "THEAD", "TR", "UL",
-  ]);
-
-  /*
-   * Readable plain text from an HTML body (email or Teams), keeping its line
-   * breaks. The markup is parsed into an inert document and only its text is
-   * kept, so nothing from the message is ever rendered as HTML or loaded.
-   */
-  function htmlToText(html) {
-    if (!String(html || "").trim()) return "";
-    const doc = new DOMParser().parseFromString(String(html), "text/html");
-    let out = "";
-    const breakLine = () => {
-      if (out && !out.endsWith("\n")) out += "\n";
-    };
-    const walk = (node, pre) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const value = node.nodeValue || "";
-        out += pre ? value : value.replace(/\s+/g, " ");
-        return;
-      }
-      if (node.nodeType !== Node.ELEMENT_NODE) return;
-      const tag = node.tagName.toUpperCase();
-      if (SKIP_TAGS.has(tag)) return;
-      // Text the sender hid (preheaders, tracking blocks) isn't part of what they see.
-      if (/display\s*:\s*none/i.test(node.getAttribute("style") || "")) return;
-      if (tag === "BR") {
-        out += "\n";
-        return;
-      }
-      if (tag === "IMG") return;
-      if (tag === "EMOJI") {
-        out += node.getAttribute("alt") || ""; // Teams emoji carry their character in alt
-        return;
-      }
-      const block = BLOCK_TAGS.has(tag);
-      if (block) breakLine();
-      if (tag === "HR") {
-        out += "\u2500".repeat(12);
-        breakLine();
-        return;
-      }
-      if (tag === "LI") out += "\u2022 ";
-      if ((tag === "TD" || tag === "TH") && out && !/\s$/.test(out)) out += " ";
-      const inPre = pre || tag === "PRE";
-      node.childNodes.forEach((child) => walk(child, inPre));
-      if (block) breakLine();
-    };
-    walk(doc.body, false);
-    return C.normalizeText(out);
-  }
-
-  function originalFromChatMessage(raw) {
-    const body = (raw && raw.body) || {};
-    const content = C.str(body.content);
-    const plain = C.str(body.contentType).toLowerCase() === "text";
-    const text = (plain ? C.normalizeText(content) : htmlToText(content)) || C.normalizeText(C.str(raw.summary));
-    const quoted = [];
-    const files = [];
-    for (const a of Array.isArray(raw.attachments) ? raw.attachments : []) {
-      if (!a || typeof a !== "object") continue;
-      const type = C.str(a.contentType);
-      if (type === "messageReference") {
-        try {
-          const ref = JSON.parse(C.str(a.content));
-          const sender = ref && ref.messageSender && ref.messageSender.user;
-          const preview = C.normalizeText(C.str(ref && ref.messagePreview));
-          if (preview) quoted.push({ from: C.str(sender && sender.displayName).trim(), text: preview });
-        } catch (e) {
-          /* an unreadable quote is simply left out */
-        }
-        continue;
-      }
-      const name = C.str(a.name).trim();
-      if (name) files.push(name);
-      else if (type.indexOf("application/vnd.microsoft.card") === 0) files.push("Card");
-    }
-    const deleted = Boolean(C.str(raw.deletedDateTime)) || raw.deleted === true;
-    return { text: text, quoted: quoted, files: files, hasAttachments: false, deleted: deleted };
-  }
 
   function originalProblem(error) {
     if (error instanceof DashError) {
@@ -534,9 +408,6 @@
       this.kind = "demo";
       this.label = "Demo data (fictional)";
       this.data = DEMO.build(Date.now());
-    }
-    async ownerEmail() {
-      return DEMO.owner.email;
     }
     async readFeed(prev) {
       await sleep(250);
@@ -579,262 +450,6 @@
     }
   }
 
-  // ----- Microsoft 365 (MSAL + Microsoft Graph) -----
-
-  let msalLib = null;
-  let msalApp = null;
-
-  function redirectUri() {
-    if (CONFIG.redirectUri) return CONFIG.redirectUri;
-    return window.location.origin + window.location.pathname.replace(/index\.html$/, "");
-  }
-
-  async function getMsalApp() {
-    if (msalApp) return msalApp;
-    const clientId = String(pick("clientId") || "").trim();
-    if (!clientId) throw new DashError("auth", "no-client-id");
-    const mod = await import(CONFIG.msalUrl);
-    const lib = mod && mod.PublicClientApplication ? mod : mod && mod.default ? mod.default : mod;
-    const tenant = String(pick("tenantId") || "organizations").trim() || "organizations";
-    const app = new lib.PublicClientApplication({
-      auth: {
-        clientId: clientId,
-        authority: "https://login.microsoftonline.com/" + encodeURIComponent(tenant),
-        redirectUri: redirectUri(),
-      },
-      cache: { cacheLocation: "localStorage" },
-    });
-    await app.initialize();
-    msalLib = lib;
-    msalApp = app;
-    return app;
-  }
-
-  function needsInteraction(error) {
-    if (!error) return false;
-    if (msalLib && msalLib.InteractionRequiredAuthError && error instanceof msalLib.InteractionRequiredAuthError) return true;
-    const code = String(error.errorCode || error.name || "");
-    return /interaction_required|login_required|consent_required|no_tokens_found|InteractionRequired/i.test(code);
-  }
-
-  function encodePath(path) {
-    return String(path || "")
-      .split("/")
-      .filter(Boolean)
-      .map(encodeURIComponent)
-      .join("/");
-  }
-
-  class GraphBackend {
-    constructor(app, account) {
-      this.kind = "graph";
-      this.app = app;
-      this.account = account;
-      this.label = "Microsoft 365 as " + (account.username || account.name || "you");
-    }
-    async token(force) {
-      try {
-        const result = await this.app.acquireTokenSilent({ scopes: GRAPH_SCOPES, account: this.account, forceRefresh: !!force });
-        return result.accessToken;
-      } catch (e) {
-        if (needsInteraction(e)) {
-          await this.app.acquireTokenRedirect({ scopes: GRAPH_SCOPES, account: this.account });
-          return new Promise(function () {}); // the page is navigating to sign-in
-        }
-        throw e;
-      }
-    }
-    async call(path, opts, attempt) {
-      const n = attempt || 0;
-      const o = opts || {};
-      const token = await this.token(n > 0 && o._retry401);
-      const headers = Object.assign({ Authorization: "Bearer " + token }, o.headers || {});
-      const res = await fetch(path.indexOf("http") === 0 ? path : GRAPH_ROOT + path, {
-        method: o.method || "GET",
-        headers: headers,
-        body: o.body,
-        cache: "no-store",
-      });
-      if ((res.status === 429 || res.status === 503 || res.status === 504) && n < 3) {
-        const wait = Number(res.headers.get("Retry-After")) || Math.pow(2, n + 1);
-        await sleep(Math.min(wait, 30) * 1000);
-        return this.call(path, o, n + 1);
-      }
-      if (res.status === 401 && n === 0) return this.call(path, Object.assign({}, o, { _retry401: true }), 1);
-      return res;
-    }
-    folderPath() {
-      return encodePath(pick("feedFolder"));
-    }
-    itemPath(name) {
-      return "/me/drive/root:/" + this.folderPath() + "/" + encodeURIComponent(name);
-    }
-    async ownerEmail() {
-      const res = await this.call("/me?$select=mail,userPrincipalName");
-      if (!res.ok) return "";
-      const me = await res.json();
-      return String(me.mail || me.userPrincipalName || "");
-    }
-    async meta(name, kind) {
-      const res = await this.call(this.itemPath(name));
-      if (res.status === 404) return null;
-      if (!res.ok) throw new DashError(kind, "read-failed-" + res.status);
-      return res.json();
-    }
-    async download(meta, name, kind) {
-      const url = meta["@microsoft.graph.downloadUrl"];
-      const res = url ? await fetch(url, { cache: "no-store" }) : await this.call(this.itemPath(name) + ":/content");
-      if (!res.ok) throw new DashError(kind, "download-failed-" + res.status);
-      const text = await res.text();
-      return text.trim() ? C.parseJsonText(text) : null;
-    }
-    async readFeed(prev) {
-      const meta = await this.meta(FEED_NAME, "feed");
-      if (!meta) throw new DashError("feed", "feed-missing");
-      const version = meta.eTag || meta.lastModifiedDateTime || "";
-      if (prev && version && prev === version) return { unchanged: true, version: version };
-      return { json: await this.download(meta, FEED_NAME, "feed"), version: version };
-    }
-    async readFile(name) {
-      const meta = await this.meta(name, "state");
-      if (!meta) return null;
-      return { json: await this.download(meta, name, "state"), version: meta.eTag || "" };
-    }
-    async writeFile(name, value, expected) {
-      const headers = { "Content-Type": "application/json" };
-      let url = this.itemPath(name) + ":/content";
-      if (expected) headers["If-Match"] = expected;
-      else url += "?@microsoft.graph.conflictBehavior=fail";
-      const res = await this.call(url, { method: "PUT", headers: headers, body: JSON.stringify(value, null, 1) });
-      if (res.status === 412 || res.status === 409) throw conflictError();
-      if (!res.ok) throw new DashError("save", "save-failed-" + res.status);
-      const saved = await res.json();
-      return saved.eTag || "";
-    }
-    async resolveMessageId(item) {
-      const imid = item.reply.internetMessageId;
-      if (imid) {
-        const filter = "internetMessageId eq '" + imid.replace(/'/g, "''") + "'";
-        const res = await this.call("/me/messages?$filter=" + encodeURIComponent(filter) + "&$select=id&$top=1");
-        if (res.ok) {
-          const data = await res.json();
-          if (data && Array.isArray(data.value) && data.value[0] && data.value[0].id) return data.value[0].id;
-        }
-      }
-      return item.reply.messageId || null;
-    }
-    async sendEmailReply(item, text, replyAll, extras) {
-      const id = await this.resolveMessageId(item);
-      if (!id) throw new DashError("not-found", "no-message-id");
-      const added = replyAll ? [] : extras || [];
-      const body = { comment: emailHtml(text) };
-      if (added.length > 0) {
-        const rcpt = (p) => ({ emailAddress: { address: p.email, name: p.name } });
-        body.message = {
-          toRecipients: [rcpt(item.from)].concat(added.filter((p) => p.line === "to").map(rcpt)),
-          ccRecipients: added.filter((p) => p.line === "cc").map(rcpt),
-        };
-      }
-      const res = await this.call("/me/messages/" + encodeURIComponent(id) + (replyAll ? "/replyAll" : "/reply"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (res.status === 404) throw new DashError("not-found", "original-missing");
-      if (res.status === 400) {
-        const detail = await res.text().catch(() => "");
-        if (/ErrorInvalidIdMalformed|ErrorItemNotFound|ResourceNotFound/i.test(detail)) {
-          throw new DashError("not-found", "original-missing");
-        }
-      }
-      if (!res.ok) throw new DashError("send", "send-failed-" + res.status);
-      return replyAll ? "replyAll" : "reply";
-    }
-    async sendEmailAsNew(item, text, replyAll, extras) {
-      const to = item.from.email.trim();
-      if (!to) throw new DashError("send", "no-recipient");
-      const added = replyAll ? [] : extras || [];
-      const toList = [to].concat(added.filter((p) => p.line === "to").map((p) => p.email));
-      const cc = replyAll
-        ? S.people.replyAllRecipients(item).filter((e) => e !== to.toLowerCase())
-        : added.filter((p) => p.line === "cc").map((p) => p.email);
-      const subject = /^re:/i.test(item.subject) ? item.subject : "RE: " + item.subject;
-      const rcpt = (address) => ({ emailAddress: { address: address } });
-      const res = await this.call("/me/sendMail", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: {
-            subject: subject,
-            body: { contentType: "HTML", content: emailHtml(text) },
-            toRecipients: toList.map(rcpt),
-            ccRecipients: cc.map(rcpt),
-          },
-          saveToSentItems: true,
-        }),
-      });
-      if (!res.ok) throw new DashError("send", "send-failed-" + res.status);
-      return "newEmail";
-    }
-    async readOriginal(item) {
-      const check = (res) => {
-        if (res.status === 404 || res.status === 410) throw new DashError("not-found", "original-missing");
-        if (res.status === 401 || res.status === 403) throw new DashError("denied", "original-denied");
-        if (!res.ok) throw new DashError("original", "original-failed-" + res.status);
-      };
-      if (item.channel === "email") {
-        const id = await this.resolveMessageId(item);
-        if (!id) throw new DashError("not-found", "no-message-id");
-        const res = await this.call("/me/messages/" + encodeURIComponent(id) + "?$select=body,bodyPreview,hasAttachments", {
-          headers: { Prefer: 'outlook.body-content-type="text"' },
-        });
-        if (res.status === 400) throw new DashError("not-found", "original-missing");
-        check(res);
-        const mail = await res.json();
-        const body = (mail && mail.body) || {};
-        const html = C.str(body.contentType).toLowerCase() === "html";
-        const text = (html ? htmlToText(C.str(body.content)) : C.normalizeText(C.str(body.content))) || C.normalizeText(C.str(mail.bodyPreview));
-        return { text: text, quoted: [], files: [], hasAttachments: mail.hasAttachments === true, deleted: false };
-      }
-      const ids = C.teamsIds(item);
-      const enc = encodeURIComponent;
-      let path = null;
-      if (ids.teamId && ids.channelId && ids.messageId) {
-        const isReply = ids.parentMessageId && ids.parentMessageId !== ids.messageId;
-        path =
-          "/teams/" + enc(ids.teamId) + "/channels/" + enc(ids.channelId) + "/messages/" +
-          enc(isReply ? ids.parentMessageId : ids.messageId) + (isReply ? "/replies/" + enc(ids.messageId) : "");
-      } else if (ids.chatId && ids.messageId) {
-        path = "/chats/" + enc(ids.chatId) + "/messages/" + enc(ids.messageId);
-      }
-      if (!path) throw new DashError("not-found", "no-chat");
-      const res = await this.call(path);
-      check(res);
-      return originalFromChatMessage(await res.json());
-    }
-    async sendTeamsReply(item, text) {
-      const r = item.reply;
-      const payload = JSON.stringify({ body: { contentType: "html", content: C.toHtml(text) } });
-      let path = null;
-      if (r.teamId && r.channelId && r.parentMessageId) {
-        path =
-          "/teams/" +
-          encodeURIComponent(r.teamId) +
-          "/channels/" +
-          encodeURIComponent(r.channelId) +
-          "/messages/" +
-          encodeURIComponent(r.parentMessageId) +
-          "/replies";
-      } else if (r.chatId) {
-        path = "/chats/" + encodeURIComponent(r.chatId) + "/messages";
-      }
-      if (!path) throw new DashError("not-found", "no-chat");
-      const res = await this.call(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload });
-      if (!res.ok) throw new DashError("send", "send-failed-" + res.status);
-      return "teams";
-    }
-  }
-
   // ---------------------------------------------------------------------------
   // Application state
   // ---------------------------------------------------------------------------
@@ -854,21 +469,13 @@
     pendingTaskWrites: 0,
     writeChain: Promise.resolve(),
     taskChain: Promise.resolve(),
-    ownerEmail: "",
-    inferredOwner: "",
-    people: C.makePeople("", domainsSetting()),
-    connectError: null,
+    people: C.makePeople(DEMO.owner.email, DEMO.internalDomains),
     timers: [],
     originals: new Map(), // "See original" results for this visit, by item id
   };
 
   function refreshPeople() {
-    if (S.backend && S.backend.kind === "demo") {
-      S.people = C.makePeople(DEMO.owner.email, DEMO.internalDomains);
-      return;
-    }
-    const owner = String(settings.ownerEmail || S.ownerEmail || S.inferredOwner || "").trim();
-    S.people = C.makePeople(owner, domainsSetting());
+    S.people = C.makePeople(DEMO.owner.email, DEMO.internalDomains);
   }
 
   function stateData() {
@@ -903,13 +510,6 @@
       q.version = res.version;
       q.error = null;
       q.updatedAt = Date.now();
-      if (!settings.ownerEmail && !S.ownerEmail && q.data) {
-        const inferred = C.inferOwnerEmail(q.data.items);
-        if (inferred !== S.inferredOwner) {
-          S.inferredOwner = inferred;
-          refreshPeople();
-        }
-      }
     } catch (e) {
       if (backend !== S.backend) return;
       console.error("Feed read failed", e);
@@ -1153,12 +753,8 @@
   }
 
   function render() {
-    if (!S.backend) {
-      if (!view || view.kind !== "connect") {
-        view = ConnectView();
-        fill(mainEl, view.root);
-      }
-    } else if (!view || view.kind !== "dashboard") {
+    if (!S.backend) return;
+    if (!view || view.kind !== "dashboard") {
       view = DashboardView();
       fill(mainEl, view.root);
     }
@@ -1219,98 +815,23 @@
     }
   }
 
-  // ----- connect screen -----
+  // ----- dashboard -----
 
-  function ConnectView() {
-    const errorHost = h("div");
-    const signInBtn = h("button", { type: "button", class: "btn btn-default btn-md", onclick: () => signIn() }, icon("log-in"), "Sign in");
-    const signInNote = h("p", { class: "option-note" });
-    const settingsLink = h(
-      "button",
-      { type: "button", class: "btn btn-outline btn-sm", onclick: () => openSettings() },
-      icon("settings"),
-      "Add app ID",
-    );
-    const demoBtn = h("button", { type: "button", class: "btn btn-outline btn-md", onclick: () => startDemo(true) }, icon("play"), "Open demo");
-
-    const root = h(
+  /* Says plainly that this is sample data, and where each person's real dashboard lives. */
+  function PreviewNote() {
+    return h(
       "div",
-      { class: "page" },
+      { class: "notice items-start preview-note", role: "note" },
+      icon("info"),
       h(
-        "section",
-        { class: "card connect", "aria-labelledby": "connect-heading" },
-        h("h2", { id: "connect-heading", class: "h-lg" }, "Connect your COS dashboard"),
-        h(
-          "p",
-          { class: "connect-intro" },
-          "Your COS automations in Cowork write a private feed of the emails and Teams chats that need you to your OneDrive. Sign in to see it here and send the replies you approve. Your data goes only between this browser and your own Microsoft 365; nothing is stored on this website.",
-        ),
-        h(
-          "div",
-          { class: "connect-grid" },
-          h(
-            "div",
-            { class: "option" },
-            h("span", { class: "option-icon" }, icon("log-in")),
-            h("h3", null, "Sign in with Microsoft 365"),
-            h(
-              "p",
-              null,
-              "Reads your feed straight from OneDrive and sends replies from your own Outlook and Teams after a 5-second undo.",
-            ),
-            h("div", { style: "display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center" }, signInBtn, settingsLink),
-            signInNote,
-          ),
-          h(
-            "div",
-            { class: "option" },
-            h("span", { class: "option-icon" }, icon("app")),
-            h("h3", null, "No app ID? Build it in Cowork"),
-            h(
-              "p",
-              null,
-              "Cowork can build you the same dashboard as a private app that sends through your own Outlook and Teams connections. No IT setup.",
-            ),
-            h("a", { class: "btn btn-outline btn-md", href: CONFIG.setupGuideUrl + "#step-dashboard" }, icon("book-open"), "Show me how"),
-          ),
-          h(
-            "div",
-            { class: "option" },
-            h("span", { class: "option-icon" }, icon("play")),
-            h("h3", null, "Explore the demo"),
-            h("p", null, "See exactly how the dashboard works with sample data from a fictional company. Nothing is saved or sent."),
-            demoBtn,
-          ),
-        ),
-        errorHost,
-        h(
-          "p",
-          { class: "connect-foot" },
-          "New here? Turn on your COS automations first with the ",
-          h("a", { href: CONFIG.setupGuideUrl }, "setup guide"),
-          ".",
-        ),
+        "span",
+        null,
+        h("strong", null, "This is a demo with sample data. "),
+        "Your own dashboard is a private app that Cowork builds for you, connected to your Outlook, Teams and OneDrive. ",
+        h("a", { class: "link", href: CONFIG.setupGuideUrl + "#step-dashboard" }, "Build yours"),
       ),
     );
-
-    function update() {
-      const hasClient = !!String(pick("clientId") || "").trim();
-      signInBtn.disabled = !hasClient;
-      settingsLink.hidden = hasClient;
-      signInNote.textContent = hasClient
-        ? ""
-        : "Needs a one-time app registration from your IT admin. Add its Application (client) ID in Settings.";
-      signInNote.hidden = hasClient;
-      fill(errorHost, 
-        S.connectError
-          ? h("div", { class: "notice items-start connect-error", role: "alert" }, icon("triangle-alert"), h("span", null, S.connectError))
-          : "",
-      );
-    }
-    return { kind: "connect", root: root, update: update };
   }
-
-  // ----- dashboard -----
 
   function DashboardView() {
     const tasksPanel = TasksPanel();
@@ -1318,7 +839,7 @@
     const toolbar = Toolbar();
     const savedAlert = SavedAlert();
     const feedView = FeedView();
-    const root = h("div", { class: "page" }, tasksPanel.root, checkLog.root, toolbar.root, savedAlert.root, feedView.root);
+    const root = h("div", { class: "page" }, PreviewNote(), tasksPanel.root, checkLog.root, toolbar.root, savedAlert.root, feedView.root);
     function update() {
       tasksPanel.update();
       checkLog.update();
@@ -1740,9 +1261,7 @@
                 "error",
                 missing ? "Couldn't find your feed" : "Couldn't load your messages",
                 missing
-                  ? "There's no comms-feed.json in " +
-                      pick("feedFolder") +
-                      " yet. Run Step 2 of the setup guide, or check the feed folder in Settings, then try again."
+                  ? "The sample data didn't load. Reload the page to try again."
                   : "Check your connection, then try again.",
                 acts,
               ),
@@ -2861,94 +2380,43 @@
   // Settings dialog
   // ---------------------------------------------------------------------------
 
-  /* On GitHub Pages, open docs on github.com so Markdown renders; locally, use the file. */
-  function repoLink(path) {
-    const host = window.location.hostname;
-    if (!/\.github\.io$/i.test(host)) return path;
-    const owner = host.split(".")[0];
-    const repo = window.location.pathname.split("/").filter(Boolean)[0] || owner + ".github.io";
-    return "https://github.com/" + owner + "/" + repo + "/blob/main/" + path;
-  }
-
   function field(label, input, help) {
     return h("div", { class: "field" }, h("label", { for: input.id, class: "label" }, label), input, help ? h("p", { class: "field-help" }, help) : null);
   }
 
   function openSettings() {
-    const owner = h("input", {
-      id: "set-owner",
-      class: "input",
-      type: "email",
-      autocomplete: "email",
-      placeholder: S.ownerEmail || S.inferredOwner || "you@company.com",
-      value: settings.ownerEmail || "",
-    });
-    const domains = h("input", {
-      id: "set-domains",
-      class: "input",
-      placeholder: S.people.domains.join(", ") || "contoso.com",
-      value: Array.isArray(settings.internalDomains) ? settings.internalDomains.join(", ") : settings.internalDomains || "",
-    });
     const outside = h(
       "select",
       { id: "set-outside", class: "input select" },
       h("option", { value: "outlook" }, "Open them as drafts in Outlook (Send is off)"),
-      h("option", { value: "send" }, "Send them from this page"),
+      h("option", { value: "send" }, "Send them from the dashboard"),
     );
     outside.value = outsideRepliesSetting();
     const tz = h("input", { id: "set-tz", class: "input", placeholder: C.resolveTimeZone(""), value: settings.timeZone || "" });
     const research = h("input", { id: "set-research", type: "checkbox", class: "checkbox", checked: showResearch() });
-    const clientId = h("input", {
-      id: "set-client",
-      class: "input",
-      placeholder: "00000000-0000-0000-0000-000000000000",
-      value: settings.clientId || "",
-      autocomplete: "off",
-      spellcheck: "false",
-    });
-    const tenant = h("input", {
-      id: "set-tenant",
-      class: "input",
-      placeholder: CONFIG.tenantId || "organizations",
-      value: settings.tenantId || "",
-      autocomplete: "off",
-      spellcheck: "false",
-    });
-    const folder = h("input", { id: "set-folder", class: "input", placeholder: CONFIG.feedFolder, value: settings.feedFolder || "" });
     const error = h("p", { class: "field-error", role: "alert", hidden: true });
-
-    const connection = S.backend
-      ? h(
-          "div",
-          { class: "connection-line" },
-          h("span", null, "Connected to ", h("strong", { class: "font-medium" }, S.backend.label)),
-          h(
-            "button",
-            { type: "button", class: "btn btn-outline btn-sm", onclick: () => disconnect(dlg) },
-            S.backend.kind === "graph" ? "Sign out" : "Leave demo",
-          ),
-        )
-      : h("p", { class: "field-help" }, "Not connected yet.");
 
     const form = h(
       "form",
       { method: "dialog" },
-      h("h2", { id: "settings-title", class: "dialog-title" }, "Dashboard settings"),
-      h("p", { class: "dialog-desc" }, "Saved in this browser only. Nothing here is shared or sent anywhere."),
+      h("h2", { id: "settings-title", class: "dialog-title" }, "Demo settings"),
+      h("p", { class: "dialog-desc" }, "Try how the dashboard behaves. Saved in this browser only."),
       h(
         "div",
         { class: "dialog-body" },
-        connection,
+        h(
+          "div",
+          { class: "connection-line" },
+          h("span", null, "Showing ", h("strong", { class: "font-medium" }, S.backend ? S.backend.label : "sample data")),
+          h("button", { type: "button", class: "btn btn-outline btn-sm", onclick: () => resetDemo(dlg) }, "Reset the demo"),
+        ),
         h(
           "div",
           { class: "dialog-section" },
-          h("h3", null, "You"),
-          field("Your email address", owner, "Shown as \u201cYou\u201d and never added to reply-all lists. Leave blank to detect it."),
-          field("Company email domains", domains, "Comma-separated. Anyone else is flagged External before you send."),
           field(
-            "Email replies to people outside your company",
+            "Email replies to people outside the company",
             outside,
-            "Many organizations block app-sent email to outside addresses, and an Outlook draft gives external replies one more look before they go.",
+            "Many organizations block app-sent email to outside addresses, so these open as Outlook drafts. In your own app, ask Cowork to change it.",
           ),
           field("Time zone", tz, "For example America/New_York. Leave blank to use this browser's time zone."),
           h(
@@ -2957,20 +2425,6 @@
             research,
             h("label", { for: "set-research", class: "label", style: "font-weight:400" }, "Show the research notes saved with each draft"),
           ),
-        ),
-        h(
-          "div",
-          { class: "dialog-section" },
-          h("h3", null, "Microsoft 365 sign-in"),
-          h(
-            "p",
-            { class: "field-help" },
-            "Needed to read your feed from OneDrive and send replies from this page. ",
-            h("a", { href: repoLink("docs/microsoft-365-sign-in.md"), class: "link", style: "font-size:inherit", target: "_blank", rel: "noopener" }, "How to get an app ID"),
-          ),
-          field("Application (client) ID", clientId),
-          field("Directory (tenant) ID or domain", tenant, "Leave blank to allow any work account."),
-          field("Feed folder in OneDrive", folder, "Path from the top of your OneDrive."),
         ),
         error,
       ),
@@ -2984,13 +2438,6 @@
     const dlg = h("dialog", { class: "dialog", "aria-labelledby": "settings-title" }, form);
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      const ownerValue = owner.value.trim();
-      if (ownerValue && !C.isValidEmail(ownerValue)) {
-        error.hidden = false;
-        error.textContent = "Enter a valid email address, or leave it blank.";
-        owner.focus();
-        return;
-      }
       const tzValue = tz.value.trim();
       if (tzValue && C.resolveTimeZone(tzValue) !== tzValue) {
         error.hidden = false;
@@ -2998,25 +2445,13 @@
         tz.focus();
         return;
       }
-      const clientChanged = clientId.value.trim() !== (settings.clientId || "") || tenant.value.trim() !== (settings.tenantId || "");
       writeSettings({
-        ownerEmail: ownerValue,
-        internalDomains: domains.value
-          .split(/[\s,;]+/)
-          .map((d) => d.trim().replace(/^@/, ""))
-          .filter(Boolean),
         timeZone: tzValue,
         showResearchNotes: research.checked,
         outsideReplies: outside.value === "send" ? "send" : "outlook",
-        clientId: clientId.value.trim(),
-        tenantId: tenant.value.trim(),
-        feedFolder: folder.value.trim().replace(/^\/+|\/+$/g, ""),
       });
-      if (clientChanged) msalApp = null;
       fmt = makeFmt();
-      refreshPeople();
       dlg.close();
-      if (S.backend && S.backend.kind === "graph") loadFeed(true);
       scheduleRender();
     });
     dlg.addEventListener("close", () => dlg.remove());
@@ -3070,104 +2505,28 @@
     S.pendingTaskWrites = 0;
     S.writeChain = Promise.resolve();
     S.taskChain = Promise.resolve();
-    S.ownerEmail = "";
-    S.inferredOwner = "";
-    S.connectError = null;
     S.originals = new Map();
     view = null;
     refreshPeople();
     scheduleRender();
-    backend
-      .ownerEmail()
-      .then((email) => {
-        if (backend !== S.backend || !email) return;
-        S.ownerEmail = email;
-        refreshPeople();
-        scheduleRender();
-      })
-      .catch(() => {});
     loadFeed(true);
     loadSaved();
     loadTasks();
     startPolling();
   }
 
-  async function disconnect(dlg) {
-    const backend = S.backend;
+  function resetDemo(dlg) {
     if (dlg) dlg.close();
-    stopPolling();
-    S.backend = null;
-    S.feed = freshQuery();
-    view = null;
-    writeSettings({ mode: "" });
-    if (backend && backend.kind === "demo") backend.forget();
-    scheduleRender();
-    if (backend && backend.kind === "graph" && msalApp) {
-      try {
-        await msalApp.logoutRedirect({ account: backend.account, postLogoutRedirectUri: redirectUri() });
-      } catch (e) {
-        console.error("Sign-out failed", e);
-      }
-    }
-  }
-
-  function startDemo(remember) {
-    if (remember) writeSettings({ mode: "demo" });
+    if (S.backend) S.backend.forget();
     connect(new DemoBackend());
+    toast("Demo reset", { description: "Back to the original sample data." });
   }
 
-  async function signIn() {
-    try {
-      const app = await getMsalApp();
-      writeSettings({ mode: "graph" });
-      await app.loginRedirect({ scopes: GRAPH_SCOPES, prompt: "select_account", redirectUri: redirectUri() });
-    } catch (e) {
-      console.error("Sign-in failed", e);
-      S.connectError =
-        e instanceof DashError && e.message === "no-client-id"
-          ? "Add your organization's Application (client) ID in Settings first."
-          : "Couldn't start sign-in. Check the app ID and tenant in Settings, and that this page's address is registered as a redirect URI.";
-      scheduleRender();
-    }
-  }
-
-  async function boot() {
-    document.title = CONFIG.appTitle;
+  function boot() {
+    document.title = CONFIG.appTitle + " \u00b7 Demo";
     const titleEl = document.getElementById("appTitle");
     if (titleEl) titleEl.textContent = CONFIG.appTitle;
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("demo")) {
-      startDemo(false);
-      return;
-    }
-    const mode = settings.mode;
-    if (mode === "demo") {
-      startDemo(false);
-      return;
-    }
-    if (mode === "graph" && String(pick("clientId") || "").trim()) {
-      try {
-        const app = await getMsalApp();
-        const result = await app.handleRedirectPromise();
-        const account = (result && result.account) || app.getActiveAccount() || app.getAllAccounts()[0];
-        if (account) {
-          app.setActiveAccount(account);
-          connect(new GraphBackend(app, account));
-          return;
-        }
-      } catch (e) {
-        console.error("Sign-in failed", e);
-        S.connectError = "We couldn't finish signing you in. Check the app ID in Settings, then try again.";
-      }
-    }
-    if (mode === "folder") {
-      // This page used to open a OneDrive folder synced to the computer. That option is gone.
-      writeSettings({ mode: "" });
-      forgetSavedFolder();
-      S.connectError =
-        "This page no longer opens a OneDrive folder on your computer. Sign in with Microsoft 365 to see your feed and send replies here, or build the dashboard in Cowork.";
-    }
-    scheduleRender();
+    connect(new DemoBackend());
   }
 
   boot();

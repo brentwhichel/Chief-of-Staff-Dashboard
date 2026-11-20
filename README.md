@@ -1,28 +1,24 @@
 # Chief of Staff Dashboard
 
-Build your own **COS Communications Dashboard**: a private Chief of Staff dashboard for Microsoft 365 Copilot Cowork. Cowork automations screen every email
-and Teams chat against your Chief of Staff constitution, research the answer, and draft a reply in your
-voice. This page shows them day by day so you can review, edit and send each reply, mark it complete or
-delete it, and keep your own task list on the same page.
+Build your own **COS Communications Dashboard**: a private Chief of Staff app that Microsoft 365 Copilot Cowork
+builds for you. Cowork automations screen every email and Teams chat against your Chief of Staff constitution,
+research the answer, and draft a reply in your voice. Your dashboard app shows them day by day so you can review,
+edit and send each reply, mark it complete or delete it, and keep your own task list in the same app.
 
 ![The dashboard with fictional demo data, one draft open with its placeholders highlighted](https://brentwhichel.github.io/Chief-of-Staff-Dashboard/docs/images/dashboard-demo.svg)
 
-**Try it:** [open the demo](https://brentwhichel.github.io/Chief-of-Staff-Dashboard/?demo) to see it with fictional data, then follow the
-[setup guide](https://brentwhichel.github.io/Chief-of-Staff-Dashboard/setup.html) to build your own.
+- **Setup guide:** https://brentwhichel.github.io/Chief-of-Staff-Dashboard/
+- **Demo with sample data:** https://brentwhichel.github.io/Chief-of-Staff-Dashboard/demo.html
 
-- **Dashboard:** https://brentwhichel.github.io/Chief-of-Staff-Dashboard/
-- **Demo:** https://brentwhichel.github.io/Chief-of-Staff-Dashboard/?demo
-- **Setup guide:** https://brentwhichel.github.io/Chief-of-Staff-Dashboard/setup.html
-
-Anyone can use the hosted dashboard with their own data. It runs entirely in your browser and connects only
-to your own Microsoft 365 account; nothing you open in it is sent to this site or this repository. You can
-also [publish your own copy](#publish-your-own-copy-on-github-pages).
+This repository holds the setup guide, the prompts and the app source Cowork builds from. Your dashboard
+itself is always a private app in your own Microsoft 365, never this website. The demo shows how it works with
+sample data from a fictional company; it never signs in or reads real mail, chats or files.
 
 ## What you get
 
 - **My tasks** at the top: add, complete, reopen and delete your own to-dos.
 - **Latest check**, with a full run log: every automation run shows up, even when nothing needed you, and
-  the page warns you when the automations look paused.
+  the app warns you when the automations look paused.
 - **A day-by-day timeline** of the emails and Teams chats that need you, each with priority, why it matters,
   a summary, who's on it, private research notes, and a researched draft reply.
 - **Scan first, open when needed.** Each draft stays folded behind **Show draft reply**, next to
@@ -32,15 +28,15 @@ also [publish your own copy](#publish-your-own-copy-on-github-pages).
 - **Send with a 5-second undo**, Reply all, add people to a reply (external recipients flagged), Mark
   Complete, Reopen, Delete with undo, and All / Open / Completed filters.
 - **External replies through Outlook.** A reply that reaches anyone outside your company opens as a prefilled
-  draft in Outlook (also copied to your clipboard), because many organizations block app-sent email to outside
-  addresses. You can switch this off in Settings.
+  draft in Outlook, because many organizations block app-sent email to outside addresses. Ask Cowork to
+  change this in your app if your organization allows it.
 
 Nothing is ever sent unless you press **Send** on a specific item.
 
 ## How it works
 
 ```
- Watch (Cowork automations)         Store (your OneDrive)                    Act (this page)
+ Watch (Cowork automations)         Store (your OneDrive)                    Act (your dashboard app)
  ─────────────────────────          ─────────────────────────────            ────────────────────────
  Inbox email screening      ──┐     Documents/Cowork/COS Comms Dashboard/    My tasks
  Customer email screening   ──┤──►    comms-feed.json   (items + run log) ──► Latest check
@@ -49,16 +45,18 @@ Nothing is ever sent unless you press **Send** on a specific item.
                                       teams-sweep.json
 ```
 
-The page has no server. It runs in your browser and reads your own files, so each person sees only their
-own email, chats and tasks.
+Your dashboard is a private app that Cowork builds and Microsoft hosts in your own Microsoft 365. It signs you in
+with your work account and reads and sends through your own Outlook, Teams and OneDrive connections, so there's
+nothing for IT to register, and each person sees only their own email, chats and tasks.
 
 ## Set up your own dashboard
 
-Open the **setup guide** (`setup.html`) and follow Steps 1 to 7. It fills your details into every prompt:
+Open the [setup guide](https://brentwhichel.github.io/Chief-of-Staff-Dashboard/) and follow Steps 1 to 7. It fills
+your details into every prompt:
 
 1. **Constitution.** Tell Cowork how to act as your Chief of Staff.
 2. **Private feed.** Cowork creates the folder and files in your OneDrive.
-3. **Open the dashboard.** Build it in Cowork, or sign in on this website (below).
+3. **Your dashboard app.** Cowork builds the app from [`cowork-app/`](cowork-app) and gives you its link.
 4. **Email screening.** Every new email is added with a draft or skipped with a reason.
 5. **Customer email.** Its own screening watches your Inbox, so every customer email lands on the dashboard. No
    Outlook folder or rule to set up.
@@ -70,54 +68,30 @@ Then audit after the first week (Step 10) and tune weekly. The same prompts are 
 and [`docs/facilitator-guide.md`](docs/facilitator-guide.md) is a 60-minute plan for walking someone else
 through it.
 
-## Two ways to open the dashboard
+You need Microsoft 365 Copilot with Cowork, including automations, and permission to build apps in Cowork (on for
+everyone unless your admin has limited it).
 
-Both show the same dashboard, read the same feed and send the replies you approve. Pick one.
+## Changing the prompts
 
-| | A. Build it in Cowork | B. Use this website |
-|---|---|---|
-| Setup | Paste one prompt in Cowork ([details](cowork-app/README.md)) | One-time app registration by IT ([steps](docs/microsoft-365-sign-in.md)), then sign in |
-| Replies | **Send** through your own Outlook and Teams connections | **Send** from your own Outlook and Teams |
-| See original | Shown in the app | Shown on the page |
-| Where it opens | The link Cowork gives you | This website, in any browser |
-
-Replies that reach anyone outside your company open as a draft in Outlook in both, unless you change that setting.
-
-## Publish your own copy on GitHub Pages
-
-1. Create a new **public** repository on GitHub (for example `Chief-of-Staff-Dashboard`).
-2. Upload everything in this folder to the repository's `main` branch (**Add file › Upload files**, then drag
-   in the folder contents, including the hidden `.nojekyll` file).
-3. In the repository, open **Settings › Pages**. Under **Build and deployment**, choose **Deploy from a
-   branch**, pick `main` and `/ (root)`, and select **Save**.
-4. After a minute or two, open `https://<your-github-user>.github.io/<repo>/`.
-5. Optional: to turn on Microsoft 365 sign-in for everyone, set `clientId` and `tenantId` in
-   [`config.js`](config.js). See [`docs/microsoft-365-sign-in.md`](docs/microsoft-365-sign-in.md).
-
-To change the prompts, edit [`assets/prompts.js`](assets/prompts.js) and run `node tools/build-prompts.js` to
-refresh the Markdown copies in `prompts/`.
+Edit [`assets/prompts.js`](assets/prompts.js), then run `node tools/build-prompts.js` to refresh the Markdown
+copies in `prompts/`.
 
 ## Privacy and security
 
-- No server, no analytics, no data in this repository. The page reads your feed in your browser and talks
-  only to your own Microsoft 365 (`graph.microsoft.com`, `login.microsoftonline.com`) when you sign in.
-- Settings and sign-in tokens are stored only in your browser.
-- Every piece of feed text is rendered as text, never as HTML, and only `http`, `https`, `mailto` and `tel`
-  links become clickable.
-- `config.js` is public. Never put secrets or personal information in it; an application (client) ID is not
-  a secret.
+- This repository holds no personal data. Every name and company in the demo is fictional.
+- The demo never signs in, never reads real mail, chats or files, and never sends anything. Changes you make in
+  it are kept only in that browser tab.
+- Your dashboard app follows your organization's policies, and it reads and sends only as you.
 
 ## Repository layout
 
 | Path | What it is |
 |---|---|
-| `index.html`, `config.js` | The dashboard |
-| `setup.html` | The step-by-step setup guide |
-| `assets/` | Page code and styles (`app.js`, `core.js`, `styles.css`), the setup guide (`setup.js`, `setup.css`), all prompts (`prompts.js`) and the fictional demo data |
+| `index.html`, `setup.html` | The step-by-step setup guide (`index.html` opens it) |
+| `demo.html`, `config.js` | The demo with sample data |
+| `assets/` | Demo code and styles (`app.js`, `core.js`, `styles.css`), the setup guide (`setup.js`, `setup.css`), all prompts (`prompts.js`) and the fictional demo data |
 | `prompts/` | Every setup prompt as Markdown |
-| `docs/` | Feed format, Microsoft 365 sign-in, facilitator guide |
+| `cowork-app/` | The app source Cowork builds your dashboard from (Step 3) |
+| `docs/` | Feed format and facilitator guide |
 | `starter-files/` | Empty copies of the four feed files |
-| `cowork-app/` | Source for the Cowork app version of the dashboard (Step 3, option A) |
 | `tools/build-prompts.js` | Rebuilds `prompts/` from `assets/prompts.js` |
-
-All names and companies in the demo are fictional.

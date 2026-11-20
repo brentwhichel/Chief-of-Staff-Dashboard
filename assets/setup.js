@@ -294,48 +294,11 @@
     return h(
       "section",
       { class: "card", id: "step-dashboard", "aria-labelledby": "title-dashboard" },
-      h("p", { class: "eyebrow" }, "Step 3"),
-      h("h2", { class: "section-title", id: "title-dashboard" }, "Open your dashboard: pick one way"),
-      h(
-        "p",
-        { class: "section-desc" },
-        "Your automations (Steps 4 to 7) save a private feed in your OneDrive. The dashboard shows it and sends the replies you approve from your own Outlook and Teams. Both ways below give you the same dashboard, and both send. It stays empty until Step 4 runs.",
-      ),
-      h(
-        "div",
-        { class: "options is-2" },
-        h(
-          "div",
-          { class: "option" },
-          h("span", { class: "option-icon" }, icon("app")),
-          h("h3", null, "A. Build it in Cowork (no IT needed)"),
-          h(
-            "p",
-            null,
-            "Paste the prompt below into Cowork. It builds your own private copy of the dashboard app, connected to your Outlook, Teams and OneDrive. Open it from the link Cowork gives you.",
-          ),
-        ),
-        h(
-          "div",
-          { class: "option" },
-          h("span", { class: "option-icon" }, icon("login")),
-          h("h3", null, "B. Use this website (IT sets it up once)"),
-          h(
-            "p",
-            null,
-            "Your IT admin registers this website once and gives you an Application (client) ID. Open the dashboard, select Add app ID, paste it, then sign in. Works in any browser, on your computer or your phone.",
-          ),
-          h(
-            "div",
-            { class: "option-links" },
-            h("a", { class: "link", href: "index.html" }, "Open the dashboard"),
-            h("a", { class: "link", href: repoLink("docs/microsoft-365-sign-in.md") }, "Registration steps for IT"),
-          ),
-        ),
-      ),
-      h("p", { class: "pick-note" }, h("strong", null, "Not sure? "), "Choose A to start today without IT. Choose B once IT has registered the website. Both read the same feed, so you can switch later."),
-      h("div", { class: "hero-actions" }, h("a", { class: "btn btn-outline btn-md", href: "index.html?demo" }, "See the demo first")),
-      h("p", { class: "where" }, h("strong", null, "For A:"), h("span", null, appPrompt.where)),
+      h("p", { class: "eyebrow" }, appPrompt.step),
+      h("h2", { class: "section-title", id: "title-dashboard" }, appPrompt.title),
+      h("p", { class: "section-desc" }, appPrompt.why),
+      h("div", { class: "hero-actions" }, h("a", { class: "btn btn-outline btn-md", href: "demo.html" }, "See the demo first")),
+      h("p", { class: "where" }, h("strong", null, "Where:"), h("span", null, appPrompt.where)),
       promptBox(appPrompt),
       afterNote("cowork-app"),
     );

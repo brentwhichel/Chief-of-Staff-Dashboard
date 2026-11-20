@@ -1,6 +1,6 @@
-# Step 3, option A: Build your dashboard inside Cowork
+# Step 3: Build your dashboard app in Cowork
 
-Step 3 has two options; this prompt is option A. Cowork builds your own private copy of the dashboard app from this repository. Its Send button uses your own Outlook and Teams connections, so no IT app registration is needed. Option B is the website with Microsoft 365 sign-in, which needs a one-time app registration from IT and no prompt.
+Your dashboard is a private app that Cowork builds for you from this repository, just like the original. It signs you in with your work account and sends the replies you approve through your own Outlook and Teams connections, so there's nothing for IT to set up. It stays empty until Step 4 runs.
 
 **Where:** Stay in the same Cowork task and paste this prompt. Approve the Outlook, Teams and OneDrive connections when Cowork asks.
 
@@ -21,4 +21,4 @@ Build my COS Communications Dashboard as an App Builder app named "COS Communica
 Nothing is ever sent unless I press Send on a specific item.
 ```
 
-**After Cowork answers:** Open the link Cowork returns and bookmark it. It reads the same feed as the website, so you can switch to option B later.
+**After Cowork answers:** Open the link Cowork returns and bookmark it. That app is your dashboard; you can also find it at managedapps.cloud.microsoft.

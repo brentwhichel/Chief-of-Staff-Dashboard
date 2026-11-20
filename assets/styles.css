@@ -717,6 +717,8 @@ main { display: flex; flex: 1 1 0%; flex-direction: column; }
 .option .btn { align-self: flex-start; }
 .option-note { font-size: 0.75rem; line-height: 1rem; color: var(--muted-foreground); }
 .connect-error { margin-top: 1rem; }
+.preview-note { margin-bottom: 1rem; }
+.preview-note .link { white-space: nowrap; }
 .connect-foot { margin-top: 1.25rem; font-size: 0.875rem; line-height: 1.25rem; color: var(--muted-foreground); }
 .connect-foot a { color: var(--primary); font-weight: 500; text-underline-offset: 4px; }
 .connect-foot a:hover { text-decoration: underline; }
